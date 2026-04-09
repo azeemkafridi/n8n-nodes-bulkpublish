@@ -1,0 +1,52 @@
+{
+  "name": "n8n-nodes-bulkpublish",
+  "version": "1.0.0",
+  "description": "n8n community node for BulkPublish — publish to 11 social media platforms from n8n workflows",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n-nodes",
+    "social-media",
+    "publishing",
+    "scheduling",
+    "automation",
+    "facebook",
+    "instagram",
+    "twitter",
+    "tiktok",
+    "linkedin",
+    "youtube",
+    "threads",
+    "bluesky",
+    "pinterest"
+  ],
+  "license": "MIT",
+  "author": "BulkPublish",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/azeemkafridi/n8n-nodes-bulkpublish"
+  },
+  "main": "dist/nodes/BulkPublish/BulkPublish.node.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "lint": "eslint nodes/**/*.ts credentials/**/*.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/BulkPublishApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/BulkPublish/BulkPublish.node.js"
+    ]
+  },
+  "devDependencies": {
+    "n8n-workflow": "^1.0.0",
+    "typescript": "^5.5.0",
+    "gulp": "^5.0.0",
+    "@types/node": "^22.0.0"
+  },
+  "files": [
+    "dist"
+  ]
+}
