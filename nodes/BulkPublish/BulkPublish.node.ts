@@ -327,6 +327,9 @@ export class BulkPublish implements INodeType {
     const returnData: INodeExecutionData[] = [];
     const resource = this.getNodeParameter('resource', 0) as string;
     const operation = this.getNodeParameter('operation', 0) as string;
+    const credentials = await this.getCredentials('bulkPublishApi');
+    const apiKey = credentials.apiKey as string;
+    const authHeaders = { Authorization: `Bearer ${apiKey}` };
 
     for (let i = 0; i < items.length; i++) {
       let responseData: any;
@@ -352,19 +355,19 @@ export class BulkPublish implements INodeType {
           if (pcStr) body.platformContent = JSON.parse(pcStr);
 
           responseData = await this.helpers.httpRequest({
-            method: 'POST', url: `${BASE_URL}/api/posts`, body, json: true,
+            method: 'POST', url: `${BASE_URL}/api/posts`, body, json: true, headers: authHeaders,
           });
         } else if (operation === 'get') {
           const id = this.getNodeParameter('postId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/posts/${id}`, json: true,
+            method: 'GET', url: `${BASE_URL}/api/posts/${id}`, json: true, headers: authHeaders,
           });
         } else if (operation === 'list') {
           const qs: any = { limit: this.getNodeParameter('limit', i) };
           const status = this.getNodeParameter('statusFilter', i, '') as string;
           if (status) qs.status = status;
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/posts`, qs, json: true,
+            method: 'GET', url: `${BASE_URL}/api/posts`, qs, json: true, headers: authHeaders,
           });
         } else if (operation === 'update') {
           const id = this.getNodeParameter('postId', i) as number;
@@ -372,22 +375,22 @@ export class BulkPublish implements INodeType {
           const content = this.getNodeParameter('updateContent', i, '') as string;
           if (content) body.content = content;
           responseData = await this.helpers.httpRequest({
-            method: 'PUT', url: `${BASE_URL}/api/posts/${id}`, body, json: true,
+            method: 'PUT', url: `${BASE_URL}/api/posts/${id}`, body, json: true, headers: authHeaders,
           });
         } else if (operation === 'delete') {
           const id = this.getNodeParameter('postId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'DELETE', url: `${BASE_URL}/api/posts/${id}`, json: true,
+            method: 'DELETE', url: `${BASE_URL}/api/posts/${id}`, json: true, headers: authHeaders,
           });
         } else if (operation === 'publish') {
           const id = this.getNodeParameter('postId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'POST', url: `${BASE_URL}/api/posts/${id}/publish`, json: true,
+            method: 'POST', url: `${BASE_URL}/api/posts/${id}/publish`, json: true, headers: authHeaders,
           });
         } else if (operation === 'retry') {
           const id = this.getNodeParameter('postId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'POST', url: `${BASE_URL}/api/posts/${id}/retry`, json: true,
+            method: 'POST', url: `${BASE_URL}/api/posts/${id}/retry`, json: true, headers: authHeaders,
           });
         }
       }
@@ -396,22 +399,22 @@ export class BulkPublish implements INodeType {
       else if (resource === 'channel') {
         if (operation === 'list') {
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/channels`, json: true,
+            method: 'GET', url: `${BASE_URL}/api/channels`, json: true, headers: authHeaders,
           });
         } else if (operation === 'get') {
           const id = this.getNodeParameter('channelId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/channels/${id}`, json: true,
+            method: 'GET', url: `${BASE_URL}/api/channels/${id}`, json: true, headers: authHeaders,
           });
         } else if (operation === 'health') {
           const id = this.getNodeParameter('channelId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/channels/${id}/health`, json: true,
+            method: 'GET', url: `${BASE_URL}/api/channels/${id}/health`, json: true, headers: authHeaders,
           });
         } else if (operation === 'options') {
           const id = this.getNodeParameter('channelId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/channels/${id}/options`, json: true,
+            method: 'GET', url: `${BASE_URL}/api/channels/${id}/options`, json: true, headers: authHeaders,
           });
         }
       }
@@ -427,6 +430,7 @@ export class BulkPublish implements INodeType {
             url: `${BASE_URL}/api/media`,
             body: buffer,
             headers: {
+              ...authHeaders,
               'Content-Type': binaryData.mimeType,
               'Content-Disposition': `attachment; filename="${binaryData.fileName || 'upload'}"`,
             },
@@ -435,12 +439,12 @@ export class BulkPublish implements INodeType {
           if (typeof responseData === 'string') responseData = JSON.parse(responseData);
         } else if (operation === 'list') {
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/media`, json: true,
+            method: 'GET', url: `${BASE_URL}/api/media`, json: true, headers: authHeaders,
           });
         } else if (operation === 'delete') {
           const id = this.getNodeParameter('mediaId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'DELETE', url: `${BASE_URL}/api/media/${id}`, json: true,
+            method: 'DELETE', url: `${BASE_URL}/api/media/${id}`, json: true, headers: authHeaders,
           });
         }
       }
@@ -457,12 +461,12 @@ export class BulkPublish implements INodeType {
           });
         } else if (operation === 'list') {
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/labels`, json: true,
+            method: 'GET', url: `${BASE_URL}/api/labels`, json: true, headers: authHeaders,
           });
         } else if (operation === 'delete') {
           const id = this.getNodeParameter('labelId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'DELETE', url: `${BASE_URL}/api/labels/${id}`, json: true,
+            method: 'DELETE', url: `${BASE_URL}/api/labels/${id}`, json: true, headers: authHeaders,
           });
         }
       }
@@ -482,12 +486,12 @@ export class BulkPublish implements INodeType {
       else if (resource === 'schedule') {
         if (operation === 'list') {
           responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/schedules`, json: true,
+            method: 'GET', url: `${BASE_URL}/api/schedules`, json: true, headers: authHeaders,
           });
         } else if (operation === 'delete') {
           const id = this.getNodeParameter('scheduleId', i) as number;
           responseData = await this.helpers.httpRequest({
-            method: 'DELETE', url: `${BASE_URL}/api/schedules/${id}`, json: true,
+            method: 'DELETE', url: `${BASE_URL}/api/schedules/${id}`, json: true, headers: authHeaders,
           });
         }
       }
