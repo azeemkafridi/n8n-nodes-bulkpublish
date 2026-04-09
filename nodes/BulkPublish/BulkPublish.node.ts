@@ -128,6 +128,42 @@ export class BulkPublish implements INodeType {
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
         description: 'Per-platform text overrides: {"x": "Short", "linkedin": "Long version"}',
       },
+      {
+        displayName: 'Post Format',
+        name: 'postFormat',
+        type: 'options',
+        options: [
+          { name: 'Post', value: 'post' },
+          { name: 'Thread', value: 'thread' },
+        ],
+        default: 'post',
+        displayOptions: { show: { resource: ['post'], operation: ['create'] } },
+        description: 'Post format. Use "thread" for multi-part thread posts on X, Threads, Bluesky, Mastodon.',
+      },
+      {
+        displayName: 'Post Type Overrides (JSON)',
+        name: 'postTypeOverrides',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['post'], operation: ['create'] } },
+        description: 'Per-platform post type: {"instagram": "reel", "facebook": "story", "youtube": "short"}. Instagram: feed_photo, feed_video, reel, story, carousel. Facebook: post, reel, story. TikTok: video, photo_slideshow. YouTube: video, short.',
+      },
+      {
+        displayName: 'Platform Specific (JSON)',
+        name: 'platformSpecific',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['post'], operation: ['create'] } },
+        description: 'Platform-specific options: {"tiktok": {"privacyLevel": "PUBLIC_TO_EVERYONE"}, "instagram": {"collaborators": ["@user"]}}',
+      },
+      {
+        displayName: 'Thread Parts (JSON)',
+        name: 'threadParts',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['post'], operation: ['create'] } },
+        description: 'Thread parts array: [{"content": "Part 1"}, {"content": "Part 2"}]. Required when Post Format is "thread".',
+      },
 
       // Post: Get/Update/Delete/Publish/Retry — ID
       {
@@ -351,6 +387,14 @@ export class BulkPublish implements INodeType {
           if (labelStr) body.labelIds = labelStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
           const pcStr = this.getNodeParameter('platformContent', i, '') as string;
           if (pcStr) body.platformContent = JSON.parse(pcStr);
+          const postFormat = this.getNodeParameter('postFormat', i, 'post') as string;
+          if (postFormat !== 'post') body.postFormat = postFormat;
+          const postTypeOverrides = this.getNodeParameter('postTypeOverrides', i, '') as string;
+          if (postTypeOverrides) try { body.postTypeOverrides = JSON.parse(postTypeOverrides); } catch {}
+          const platformSpecific = this.getNodeParameter('platformSpecific', i, '') as string;
+          if (platformSpecific) try { body.platformSpecific = JSON.parse(platformSpecific); } catch {}
+          const threadPartsStr = this.getNodeParameter('threadParts', i, '') as string;
+          if (threadPartsStr) try { body.threadParts = JSON.parse(threadPartsStr); } catch {}
 
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts`, body, json: true,
