@@ -29,28 +29,35 @@ npm install n8n-nodes-bulkpublish
 ## Operations
 
 ### Post
-- **Create** — Create a draft or scheduled post to one or more channels
+- **Create** — Create a draft or scheduled post to one or more channels (supports all post types: reels, stories, carousels, threads via `postTypeOverrides`)
 - **Get** — Get a post with platform statuses
 - **List** — List posts with filters (status, search, date)
 - **Update** — Update a draft or scheduled post
 - **Delete** — Delete a post
 - **Publish** — Publish a draft immediately
 - **Retry** — Retry failed platforms
+- **Metrics** — Get engagement metrics (impressions, likes, comments, shares)
+- **Story Publish** — Publish as a story to Facebook or Instagram
+- **Bulk Operations** — Bulk delete or retry multiple posts
+- **Queue Slot** — Get the next optimal time slot for a channel
 
 ### Channel
 - **List** — List all connected social media channels
 - **Get** — Get a channel by ID
 - **Health Check** — Check channel token health
 - **Get Options** — Get platform-specific options (Pinterest boards, YouTube playlists, LinkedIn organizations)
+- **Mentions Search** — Search users for @mention (X, Bluesky)
 
 ### Media
 - **Upload** — Upload an image or video file
+- **Get** — Get a media file by ID
 - **List** — List uploaded media files
 - **Delete** — Delete a media file
 
 ### Label
 - **Create** — Create a label
 - **List** — List all labels
+- **Update** — Update a label name or color
 - **Delete** — Delete a label
 
 ### Analytics
@@ -59,7 +66,12 @@ npm install n8n-nodes-bulkpublish
 
 ### Schedule
 - **List** — List recurring schedules
+- **Create** — Create a recurring schedule with cron expression
+- **Update** — Update a schedule
 - **Delete** — Delete a schedule
+
+### Quota
+- **Usage** — Get current plan limits and usage
 
 ## Example Workflows
 
