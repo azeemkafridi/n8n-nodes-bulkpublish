@@ -327,9 +327,7 @@ export class BulkPublish implements INodeType {
     const returnData: INodeExecutionData[] = [];
     const resource = this.getNodeParameter('resource', 0) as string;
     const operation = this.getNodeParameter('operation', 0) as string;
-    const credentials = await this.getCredentials('bulkPublishApi');
-    const apiKey = credentials.apiKey as string;
-    const authHeaders = { Authorization: `Bearer ${apiKey}` };
+    const credName = 'bulkPublishApi';
 
     for (let i = 0; i < items.length; i++) {
       let responseData: any;
@@ -354,43 +352,43 @@ export class BulkPublish implements INodeType {
           const pcStr = this.getNodeParameter('platformContent', i, '') as string;
           if (pcStr) body.platformContent = JSON.parse(pcStr);
 
-          responseData = await this.helpers.httpRequest({
-            method: 'POST', url: `${BASE_URL}/api/posts`, body, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'POST', url: `${BASE_URL}/api/posts`, body, json: true,
           });
         } else if (operation === 'get') {
           const id = this.getNodeParameter('postId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/posts/${id}`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/posts/${id}`, json: true,
           });
         } else if (operation === 'list') {
           const qs: any = { limit: this.getNodeParameter('limit', i) };
           const status = this.getNodeParameter('statusFilter', i, '') as string;
           if (status) qs.status = status;
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/posts`, qs, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/posts`, qs, json: true,
           });
         } else if (operation === 'update') {
           const id = this.getNodeParameter('postId', i) as number;
           const body: any = {};
           const content = this.getNodeParameter('updateContent', i, '') as string;
           if (content) body.content = content;
-          responseData = await this.helpers.httpRequest({
-            method: 'PUT', url: `${BASE_URL}/api/posts/${id}`, body, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'PUT', url: `${BASE_URL}/api/posts/${id}`, body, json: true,
           });
         } else if (operation === 'delete') {
           const id = this.getNodeParameter('postId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'DELETE', url: `${BASE_URL}/api/posts/${id}`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'DELETE', url: `${BASE_URL}/api/posts/${id}`, json: true,
           });
         } else if (operation === 'publish') {
           const id = this.getNodeParameter('postId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'POST', url: `${BASE_URL}/api/posts/${id}/publish`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'POST', url: `${BASE_URL}/api/posts/${id}/publish`, json: true,
           });
         } else if (operation === 'retry') {
           const id = this.getNodeParameter('postId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'POST', url: `${BASE_URL}/api/posts/${id}/retry`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'POST', url: `${BASE_URL}/api/posts/${id}/retry`, json: true,
           });
         }
       }
@@ -398,23 +396,23 @@ export class BulkPublish implements INodeType {
       // ── Channels ───────────────────────────────────────────
       else if (resource === 'channel') {
         if (operation === 'list') {
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/channels`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/channels`, json: true,
           });
         } else if (operation === 'get') {
           const id = this.getNodeParameter('channelId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/channels/${id}`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/channels/${id}`, json: true,
           });
         } else if (operation === 'health') {
           const id = this.getNodeParameter('channelId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/channels/${id}/health`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/channels/${id}/health`, json: true,
           });
         } else if (operation === 'options') {
           const id = this.getNodeParameter('channelId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/channels/${id}/options`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/channels/${id}/options`, json: true,
           });
         }
       }
@@ -425,12 +423,11 @@ export class BulkPublish implements INodeType {
           const binaryProperty = this.getNodeParameter('binaryProperty', i) as string;
           const binaryData = this.helpers.assertBinaryData(i, binaryProperty);
           const buffer = await this.helpers.getBinaryDataBuffer(i, binaryProperty);
-          responseData = await this.helpers.httpRequest({
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
             method: 'POST',
             url: `${BASE_URL}/api/media`,
             body: buffer,
             headers: {
-              ...authHeaders,
               'Content-Type': binaryData.mimeType,
               'Content-Disposition': `attachment; filename="${binaryData.fileName || 'upload'}"`,
             },
@@ -438,13 +435,13 @@ export class BulkPublish implements INodeType {
           });
           if (typeof responseData === 'string') responseData = JSON.parse(responseData);
         } else if (operation === 'list') {
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/media`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/media`, json: true,
           });
         } else if (operation === 'delete') {
           const id = this.getNodeParameter('mediaId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'DELETE', url: `${BASE_URL}/api/media/${id}`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'DELETE', url: `${BASE_URL}/api/media/${id}`, json: true,
           });
         }
       }
@@ -452,7 +449,7 @@ export class BulkPublish implements INodeType {
       // ── Labels ─────────────────────────────────────────────
       else if (resource === 'label') {
         if (operation === 'create') {
-          responseData = await this.helpers.httpRequest({
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
             method: 'POST', url: `${BASE_URL}/api/labels`, json: true,
             body: {
               name: this.getNodeParameter('labelName', i) as string,
@@ -460,13 +457,13 @@ export class BulkPublish implements INodeType {
             },
           });
         } else if (operation === 'list') {
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/labels`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/labels`, json: true,
           });
         } else if (operation === 'delete') {
           const id = this.getNodeParameter('labelId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'DELETE', url: `${BASE_URL}/api/labels/${id}`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'DELETE', url: `${BASE_URL}/api/labels/${id}`, json: true,
           });
         }
       }
@@ -476,7 +473,7 @@ export class BulkPublish implements INodeType {
         const from = this.getNodeParameter('from', i) as string;
         const to = this.getNodeParameter('to', i) as string;
         const endpoint = operation === 'engagement' ? 'engagement' : 'summary';
-        responseData = await this.helpers.httpRequest({
+        responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
           method: 'GET', url: `${BASE_URL}/api/analytics/${endpoint}`,
           qs: { from, to }, json: true,
         });
@@ -485,13 +482,13 @@ export class BulkPublish implements INodeType {
       // ── Schedules ──────────────────────────────────────────
       else if (resource === 'schedule') {
         if (operation === 'list') {
-          responseData = await this.helpers.httpRequest({
-            method: 'GET', url: `${BASE_URL}/api/schedules`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'GET', url: `${BASE_URL}/api/schedules`, json: true,
           });
         } else if (operation === 'delete') {
           const id = this.getNodeParameter('scheduleId', i) as number;
-          responseData = await this.helpers.httpRequest({
-            method: 'DELETE', url: `${BASE_URL}/api/schedules/${id}`, json: true, headers: authHeaders,
+          responseData = await (this as any).helpers.httpRequestWithAuthentication(credName, {
+            method: 'DELETE', url: `${BASE_URL}/api/schedules/${id}`, json: true,
           });
         }
       }
