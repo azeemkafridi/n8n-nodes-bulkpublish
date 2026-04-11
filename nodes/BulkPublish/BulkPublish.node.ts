@@ -151,7 +151,7 @@ export class BulkPublish implements INodeType {
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Per-platform post type: {"instagram": "reel", "facebook": "story", "youtube": "short"}. Instagram: feed_photo, feed_video, reel, story, carousel. Facebook: post, reel, story. TikTok: video, photo_slideshow. YouTube: video, short.',
+        description: 'Per-platform post type. Instagram: feed_photo, feed_video, reel, story, carousel. Facebook: post, reel, story. TikTok: video, photo_slideshow. YouTube: video, short. LinkedIn: post, multi_image, pdf_carousel, article. Pinterest: pin, video_pin, carousel. Threads: text, image, video, carousel. GMB: standard, event, offer. IMPORTANT: YouTube/TikTok require video files. Instagram defaults to feed_photo — set reel or feed_video for video.',
       },
       {
         displayName: 'Platform Specific (JSON)',
@@ -159,7 +159,7 @@ export class BulkPublish implements INodeType {
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Platform-specific options: {"tiktok": {"privacyLevel": "PUBLIC_TO_EVERYONE"}, "instagram": {"collaborators": ["@user"]}}',
+        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars). Optional: youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, linkedin.url (for article), gmb.ctaType, mastodon.visibility.',
       },
       {
         displayName: 'Thread Parts (JSON)',
