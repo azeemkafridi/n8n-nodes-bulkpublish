@@ -3,6 +3,7 @@ import {
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
+  NodeOperationError,
 } from 'n8n-workflow';
 
 const BASE_URL = 'https://app.bulkpublish.com';
@@ -567,11 +568,23 @@ export class BulkPublish implements INodeType {
           const postFormat = this.getNodeParameter('postFormat', i, 'post') as string;
           if (postFormat !== 'post') body.postFormat = postFormat;
           const postTypeOverrides = this.getNodeParameter('postTypeOverrides', i, '') as string;
-          if (postTypeOverrides) try { body.postTypeOverrides = JSON.parse(postTypeOverrides); } catch {}
+          if (postTypeOverrides) {
+            try { body.postTypeOverrides = JSON.parse(postTypeOverrides); } catch {
+              throw new NodeOperationError(this.getNode(), 'Post Type Overrides must be valid JSON', { itemIndex: i });
+            }
+          }
           const platformSpecific = this.getNodeParameter('platformSpecific', i, '') as string;
-          if (platformSpecific) try { body.platformSpecific = JSON.parse(platformSpecific); } catch {}
+          if (platformSpecific) {
+            try { body.platformSpecific = JSON.parse(platformSpecific); } catch {
+              throw new NodeOperationError(this.getNode(), 'Platform Specific must be valid JSON', { itemIndex: i });
+            }
+          }
           const threadPartsStr = this.getNodeParameter('threadParts', i, '') as string;
-          if (threadPartsStr) try { body.threadParts = JSON.parse(threadPartsStr); } catch {}
+          if (threadPartsStr) {
+            try { body.threadParts = JSON.parse(threadPartsStr); } catch {
+              throw new NodeOperationError(this.getNode(), 'Thread Parts must be valid JSON', { itemIndex: i });
+            }
+          }
 
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts`, body, json: true,

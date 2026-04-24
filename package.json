@@ -20,6 +20,7 @@
     "pinterest"
   ],
   "license": "MIT",
+  "homepage": "https://github.com/azeemkafridi/n8n-nodes-bulkpublish",
   "author": {
     "name": "BulkPublish",
     "email": "n8n@bulkpublish.com",
@@ -43,6 +44,9 @@
     "nodes": [
       "dist/nodes/BulkPublish/BulkPublish.node.js"
     ]
+  },
+  "peerDependencies": {
+    "n8n-workflow": ">=1.0.0"
   },
   "devDependencies": {
     "n8n-workflow": "^1.0.0",
