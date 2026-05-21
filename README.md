@@ -45,7 +45,7 @@ npm install n8n-nodes-bulkpublish
 - **List** — List all connected social media channels
 - **Get** — Get a channel by ID
 - **Health Check** — Check channel token health
-- **Get Options** — Get platform-specific options (Pinterest boards, YouTube playlists, LinkedIn organizations)
+- **Get Options** — Get platform-specific options (Pinterest boards, YouTube playlists)
 - **Mentions Search** — Search users for @mention (X, Bluesky)
 
 ### Media

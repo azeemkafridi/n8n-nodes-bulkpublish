@@ -276,7 +276,7 @@ export class BulkPublish implements INodeType {
           { name: 'List', value: 'list', action: 'List channels' },
           { name: 'Get', value: 'get', action: 'Get a channel' },
           { name: 'Health Check', value: 'health', action: 'Check channel health' },
-          { name: 'Get Options', value: 'options', action: 'Get platform options (boards, playlists, orgs)' },
+          { name: 'Get Options', value: 'options', action: 'Get platform options (boards, playlists)' },
           { name: 'Mentions Search', value: 'mentions', action: 'Search mentions for a channel' },
         ],
         default: 'list',
