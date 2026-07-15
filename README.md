@@ -1,6 +1,6 @@
 # n8n-nodes-bulkpublish
 
-n8n community node for [BulkPublish](https://bulkpublish.com) — publish to 11 social media platforms from your n8n workflows.
+n8n community node for [BulkPublish](https://bulkpublish.com) — publish to 14 social media platforms from your n8n workflows.
 
 ## Supported Platforms
 
@@ -66,7 +66,7 @@ npm install n8n-nodes-bulkpublish
 
 ### Schedule
 - **List** — List recurring schedules
-- **Create** — Create a recurring schedule with cron expression
+- **Create** — Create a recurring schedule (frequency + time of day)
 - **Update** — Update a schedule
 - **Delete** — Delete a schedule
 

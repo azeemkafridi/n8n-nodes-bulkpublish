@@ -16,7 +16,7 @@ export class BulkPublish implements INodeType {
     group: ['output'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-    description: 'Publish to 11 social media platforms — Facebook, Instagram, X, TikTok, YouTube, Threads, Bluesky, Pinterest, LinkedIn, Mastodon, Google Business Profile',
+    description: 'Publish to 14 social media platforms — Facebook, Instagram, X, TikTok, YouTube, Threads, Bluesky, Pinterest, LinkedIn, Mastodon, Google Business Profile, Reddit, Discord, Telegram',
     defaults: { name: 'BulkPublish' },
     inputs: ['main'],
     outputs: ['main'],
@@ -58,7 +58,7 @@ export class BulkPublish implements INodeType {
           { name: 'Metrics', value: 'metrics', action: 'Get post metrics' },
           { name: 'Story Publish', value: 'storyPublish', action: 'Publish a story' },
           { name: 'Bulk Operations', value: 'bulk', action: 'Bulk delete or retry posts' },
-          { name: 'Queue Slot', value: 'queueSlot', action: 'Get next queue slot for a channel' },
+          { name: 'Queue Slot', value: 'queueSlot', action: 'Get the next queue slot' },
         ],
         default: 'create',
       },
@@ -201,7 +201,10 @@ export class BulkPublish implements INodeType {
           { name: 'All', value: '' },
           { name: 'Draft', value: 'draft' },
           { name: 'Scheduled', value: 'scheduled' },
+          { name: 'Publishing', value: 'publishing' },
           { name: 'Published', value: 'published' },
+          { name: 'Processing', value: 'processing' },
+          { name: 'Partial', value: 'partial' },
           { name: 'Failed', value: 'failed' },
         ],
         default: '',
@@ -238,6 +241,7 @@ export class BulkPublish implements INodeType {
         options: [
           { name: 'Delete', value: 'delete' },
           { name: 'Retry', value: 'retry' },
+          { name: 'Reschedule', value: 'reschedule' },
         ],
         default: 'delete',
         required: true,
@@ -253,16 +257,24 @@ export class BulkPublish implements INodeType {
         displayOptions: { show: { resource: ['post'], operation: ['bulk'] } },
         description: 'Comma-separated post IDs to act on',
       },
+      {
+        displayName: 'Scheduled At',
+        name: 'bulkScheduledAt',
+        type: 'dateTime',
+        default: '',
+        required: true,
+        displayOptions: { show: { resource: ['post'], operation: ['bulk'], bulkAction: ['reschedule'] } },
+        description: 'New publish time (ISO 8601) — required when action is Reschedule',
+      },
 
       // Post: Queue Slot fields
       {
-        displayName: 'Channel ID',
-        name: 'queueChannelId',
-        type: 'number',
-        default: 0,
-        required: true,
+        displayName: 'Timezone',
+        name: 'queueTimezone',
+        type: 'string',
+        default: 'UTC',
         displayOptions: { show: { resource: ['post'], operation: ['queueSlot'] } },
-        description: 'Channel ID to get the next queue slot for',
+        description: 'IANA timezone for the slot calculation (e.g. America/New_York). Defaults to UTC. The queue slot is org-wide, not per-channel.',
       },
 
       // ── Channel Operations ───────────────────────────────────
@@ -460,23 +472,53 @@ export class BulkPublish implements INodeType {
         description: 'Comma-separated channel IDs for this schedule',
       },
       {
-        displayName: 'Content',
+        displayName: 'Content Template',
         name: 'scheduleContent',
         type: 'string',
         typeOptions: { rows: 4 },
         default: '',
-        required: true,
         displayOptions: { show: { resource: ['schedule'], operation: ['create'] } },
-        description: 'Post content for the scheduled posts',
+        description: 'Post content template used for every generated post',
       },
       {
-        displayName: 'Cron Expression',
-        name: 'cronExpression',
-        type: 'string',
-        default: '',
+        displayName: 'Frequency',
+        name: 'scheduleFrequency',
+        type: 'options',
+        options: [
+          { name: 'Daily', value: 'daily' },
+          { name: 'Weekly', value: 'weekly' },
+          { name: 'Biweekly', value: 'biweekly' },
+          { name: 'Monthly', value: 'monthly' },
+        ],
+        default: 'daily',
         required: true,
         displayOptions: { show: { resource: ['schedule'], operation: ['create'] } },
-        description: 'Cron expression for the schedule (e.g. "0 9 * * 1" for every Monday at 9am)',
+        description: 'How often the schedule runs',
+      },
+      {
+        displayName: 'Time of Day',
+        name: 'scheduleTimeOfDay',
+        type: 'string',
+        default: '09:00',
+        required: true,
+        displayOptions: { show: { resource: ['schedule'], operation: ['create'] } },
+        description: '24-hour time to post, "HH:MM" (e.g. 09:00)',
+      },
+      {
+        displayName: 'Day of Week',
+        name: 'scheduleDayOfWeek',
+        type: 'number',
+        default: 1,
+        displayOptions: { show: { resource: ['schedule'], operation: ['create'], scheduleFrequency: ['weekly', 'biweekly'] } },
+        description: 'Day of week (0 = Sunday … 6 = Saturday). Required for weekly/biweekly.',
+      },
+      {
+        displayName: 'Day of Month',
+        name: 'scheduleDayOfMonth',
+        type: 'number',
+        default: 1,
+        displayOptions: { show: { resource: ['schedule'], operation: ['create'], scheduleFrequency: ['monthly'] } },
+        description: 'Day of month (1–31). Required for monthly.',
       },
       {
         displayName: 'Timezone',
@@ -496,21 +538,60 @@ export class BulkPublish implements INodeType {
         description: 'New schedule name (leave empty to keep current)',
       },
       {
-        displayName: 'Content',
+        displayName: 'Content Template',
         name: 'updateScheduleContent',
         type: 'string',
         typeOptions: { rows: 4 },
         default: '',
         displayOptions: { show: { resource: ['schedule'], operation: ['update'] } },
-        description: 'New post content (leave empty to keep current)',
+        description: 'New content template (leave empty to keep current)',
       },
       {
-        displayName: 'Cron Expression',
-        name: 'updateCronExpression',
+        displayName: 'Frequency',
+        name: 'updateScheduleFrequency',
+        type: 'options',
+        options: [
+          { name: 'Keep Current', value: '' },
+          { name: 'Daily', value: 'daily' },
+          { name: 'Weekly', value: 'weekly' },
+          { name: 'Biweekly', value: 'biweekly' },
+          { name: 'Monthly', value: 'monthly' },
+        ],
+        default: '',
+        displayOptions: { show: { resource: ['schedule'], operation: ['update'] } },
+        description: 'New frequency (leave as Keep Current to not change)',
+      },
+      {
+        displayName: 'Time of Day',
+        name: 'updateScheduleTimeOfDay',
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['schedule'], operation: ['update'] } },
-        description: 'New cron expression (leave empty to keep current)',
+        description: 'New 24-hour time "HH:MM" (leave empty to keep current)',
+      },
+      {
+        displayName: 'Day of Week',
+        name: 'updateScheduleDayOfWeek',
+        type: 'number',
+        default: -1,
+        displayOptions: { show: { resource: ['schedule'], operation: ['update'], updateScheduleFrequency: ['weekly', 'biweekly'] } },
+        description: 'New day of week (0 = Sunday … 6 = Saturday). Use -1 to keep current.',
+      },
+      {
+        displayName: 'Day of Month',
+        name: 'updateScheduleDayOfMonth',
+        type: 'number',
+        default: -1,
+        displayOptions: { show: { resource: ['schedule'], operation: ['update'], updateScheduleFrequency: ['monthly'] } },
+        description: 'New day of month (1–31). Use -1 to keep current.',
+      },
+      {
+        displayName: 'Timezone',
+        name: 'updateScheduleTimezone',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['schedule'], operation: ['update'] } },
+        description: 'New IANA timezone (leave empty to keep current)',
       },
       {
         displayName: 'Is Active',
@@ -562,7 +643,7 @@ export class BulkPublish implements INodeType {
           const mediaStr = this.getNodeParameter('mediaFiles', i, '') as string;
           if (mediaStr) body.mediaFiles = mediaStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
           const labelStr = this.getNodeParameter('labelIds', i, '') as string;
-          if (labelStr) body.labelIds = labelStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
+          if (labelStr) body.labels = labelStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
           const pcStr = this.getNodeParameter('platformContent', i, '') as string;
           if (pcStr) body.platformContent = JSON.parse(pcStr);
           const postFormat = this.getNodeParameter('postFormat', i, 'post') as string;
@@ -640,14 +721,20 @@ export class BulkPublish implements INodeType {
           const action = this.getNodeParameter('bulkAction', i) as string;
           const idsStr = this.getNodeParameter('bulkPostIds', i) as string;
           const postIds = idsStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
+          const bulkBody: any = { action, postIds };
+          if (action === 'reschedule') {
+            bulkBody.scheduledAt = this.getNodeParameter('bulkScheduledAt', i) as string;
+          }
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts/bulk`, json: true,
-            body: { action, postIds },
+            body: bulkBody,
           });
         } else if (operation === 'queueSlot') {
-          const channelId = this.getNodeParameter('queueChannelId', i) as number;
+          const timezone = this.getNodeParameter('queueTimezone', i, 'UTC') as string;
+          const qs: any = {};
+          if (timezone) qs.timezone = timezone;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
-            method: 'GET', url: `${BASE_URL}/api/posts/queue-slot`, qs: { channelId }, json: true,
+            method: 'GET', url: `${BASE_URL}/api/posts/queue-slot`, qs, json: true,
           });
         }
       }
@@ -764,13 +851,20 @@ export class BulkPublish implements INodeType {
         if (operation === 'create') {
           const channelIdsStr = this.getNodeParameter('scheduleChannelIds', i) as string;
           const channelIds = channelIdsStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
+          const frequency = this.getNodeParameter('scheduleFrequency', i) as string;
           const body: any = {
             name: this.getNodeParameter('scheduleName', i) as string,
             channelIds,
-            content: this.getNodeParameter('scheduleContent', i) as string,
-            cronExpression: this.getNodeParameter('cronExpression', i) as string,
+            frequency,
+            timeOfDay: this.getNodeParameter('scheduleTimeOfDay', i) as string,
+            contentTemplate: this.getNodeParameter('scheduleContent', i, '') as string,
             timezone: this.getNodeParameter('scheduleTimezone', i, 'UTC') as string,
           };
+          if (frequency === 'weekly' || frequency === 'biweekly') {
+            body.dayOfWeek = this.getNodeParameter('scheduleDayOfWeek', i, 1) as number;
+          } else if (frequency === 'monthly') {
+            body.dayOfMonth = this.getNodeParameter('scheduleDayOfMonth', i, 1) as number;
+          }
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/schedules`, body, json: true,
           });
@@ -784,9 +878,22 @@ export class BulkPublish implements INodeType {
           const name = this.getNodeParameter('updateScheduleName', i, '') as string;
           if (name) body.name = name;
           const content = this.getNodeParameter('updateScheduleContent', i, '') as string;
-          if (content) body.content = content;
-          const cron = this.getNodeParameter('updateCronExpression', i, '') as string;
-          if (cron) body.cronExpression = cron;
+          if (content) body.contentTemplate = content;
+          const frequency = this.getNodeParameter('updateScheduleFrequency', i, '') as string;
+          if (frequency) {
+            body.frequency = frequency;
+            if (frequency === 'weekly' || frequency === 'biweekly') {
+              const dow = this.getNodeParameter('updateScheduleDayOfWeek', i, -1) as number;
+              if (dow >= 0) body.dayOfWeek = dow;
+            } else if (frequency === 'monthly') {
+              const dom = this.getNodeParameter('updateScheduleDayOfMonth', i, -1) as number;
+              if (dom >= 1) body.dayOfMonth = dom;
+            }
+          }
+          const timeOfDay = this.getNodeParameter('updateScheduleTimeOfDay', i, '') as string;
+          if (timeOfDay) body.timeOfDay = timeOfDay;
+          const updateTz = this.getNodeParameter('updateScheduleTimezone', i, '') as string;
+          if (updateTz) body.timezone = updateTz;
           body.isActive = this.getNodeParameter('isActive', i, true) as boolean;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'PUT', url: `${BASE_URL}/api/schedules/${id}`, body, json: true,
