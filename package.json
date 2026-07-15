@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-bulkpublish",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "n8n community node for BulkPublish — publish to 11 social media platforms from n8n workflows",
   "keywords": [
     "n8n-community-node-package",
@@ -46,7 +46,7 @@
     ]
   },
   "peerDependencies": {
-    "n8n-workflow": ">=1.0.0"
+    "n8n-workflow": "*"
   },
   "devDependencies": {
     "n8n-workflow": "^1.0.0",
