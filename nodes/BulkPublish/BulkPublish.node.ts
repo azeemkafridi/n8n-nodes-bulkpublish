@@ -31,8 +31,10 @@ export class BulkPublish implements INodeType {
         options: [
           { name: 'Post', value: 'post' },
           { name: 'Channel', value: 'channel' },
+          { name: 'Channel Set', value: 'channelSet' },
           { name: 'Media', value: 'media' },
           { name: 'Label', value: 'label' },
+          { name: 'RSS Feed', value: 'rssFeed' },
           { name: 'Analytics', value: 'analytics' },
           { name: 'Schedule', value: 'schedule' },
           { name: 'Quota', value: 'quota' },
@@ -311,6 +313,172 @@ export class BulkPublish implements INodeType {
         description: 'Search query for mentions',
       },
 
+      // ── Channel Set Operations ───────────────────────────────
+      {
+        displayName: 'Operation',
+        name: 'operation',
+        type: 'options',
+        noDataExpression: true,
+        displayOptions: { show: { resource: ['channelSet'] } },
+        options: [
+          { name: 'Create', value: 'create', action: 'Create a channel set' },
+          { name: 'List', value: 'list', action: 'List channel sets' },
+          { name: 'Update', value: 'update', action: 'Update a channel set' },
+          { name: 'Delete', value: 'delete', action: 'Delete a channel set' },
+        ],
+        default: 'list',
+      },
+      {
+        displayName: 'Set Name',
+        name: 'channelSetName',
+        type: 'string',
+        default: '',
+        required: true,
+        displayOptions: { show: { resource: ['channelSet'], operation: ['create'] } },
+        description: 'Name of the channel set (max 100 chars, unique per organization — a duplicate name returns a 409 DUPLICATE_NAME error)',
+      },
+      {
+        displayName: 'Channel IDs',
+        name: 'channelSetChannelIds',
+        type: 'string',
+        default: '',
+        required: true,
+        displayOptions: { show: { resource: ['channelSet'], operation: ['create'] } },
+        description: 'Comma-separated channel IDs in this set (at least one, must belong to your organization). An organization can have at most 50 channel sets.',
+      },
+      {
+        displayName: 'Channel Set ID',
+        name: 'channelSetId',
+        type: 'number',
+        default: 0,
+        required: true,
+        displayOptions: { show: { resource: ['channelSet'], operation: ['update', 'delete'] } },
+      },
+      {
+        displayName: 'Set Name',
+        name: 'updateChannelSetName',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['channelSet'], operation: ['update'] } },
+        description: 'New name (leave empty to keep current). Unique per organization — a duplicate name returns a 409 DUPLICATE_NAME error.',
+      },
+      {
+        displayName: 'Channel IDs',
+        name: 'updateChannelSetChannelIds',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['channelSet'], operation: ['update'] } },
+        description: 'New comma-separated channel IDs (leave empty to keep current). At least one of Name or Channel IDs must be provided.',
+      },
+
+      // ── RSS Feed Operations ──────────────────────────────────
+      {
+        displayName: 'Operation',
+        name: 'operation',
+        type: 'options',
+        noDataExpression: true,
+        displayOptions: { show: { resource: ['rssFeed'] } },
+        options: [
+          { name: 'Create', value: 'create', action: 'Create an RSS autopost feed' },
+          { name: 'List', value: 'list', action: 'List RSS feeds' },
+          { name: 'Update', value: 'update', action: 'Update an RSS feed' },
+          { name: 'Delete', value: 'delete', action: 'Delete an RSS feed' },
+        ],
+        default: 'list',
+      },
+      {
+        displayName: 'Feed Name',
+        name: 'rssFeedName',
+        type: 'string',
+        default: '',
+        required: true,
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['create'] } },
+        description: 'Name of the feed (max 100 chars)',
+      },
+      {
+        displayName: 'Feed URL',
+        name: 'rssFeedUrl',
+        type: 'string',
+        default: '',
+        required: true,
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['create'] } },
+        description: 'Public http(s) RSS 2.0 or Atom feed URL. The server validates that the feed is reachable. Feeds are polled every 15 minutes; new items become posts. An organization can have at most 20 feeds.',
+      },
+      {
+        displayName: 'Channel IDs',
+        name: 'rssFeedChannelIds',
+        type: 'string',
+        default: '',
+        required: true,
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['create'] } },
+        description: 'Comma-separated channel IDs new items are posted to (at least one, must belong to your organization)',
+      },
+      {
+        displayName: 'Mode',
+        name: 'rssFeedMode',
+        type: 'options',
+        options: [
+          { name: 'Draft', value: 'draft' },
+          { name: 'Publish', value: 'publish' },
+        ],
+        default: 'draft',
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['create'] } },
+        description: 'Draft (the default): new feed items land as draft posts for review. Publish: new items are auto-published.',
+      },
+      {
+        displayName: 'RSS Feed ID',
+        name: 'rssFeedId',
+        type: 'number',
+        default: 0,
+        required: true,
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['update', 'delete'] } },
+      },
+      {
+        displayName: 'Feed Name',
+        name: 'updateRssFeedName',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['update'] } },
+        description: 'New name (leave empty to keep current)',
+      },
+      {
+        displayName: 'Feed URL',
+        name: 'updateRssFeedUrl',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['update'] } },
+        description: 'New feed URL (leave empty to keep current). NOTE: changing the URL re-baselines the feed — only items published after the change are posted, the backlog is not flooded.',
+      },
+      {
+        displayName: 'Channel IDs',
+        name: 'updateRssFeedChannelIds',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['update'] } },
+        description: 'New comma-separated channel IDs (leave empty to keep current)',
+      },
+      {
+        displayName: 'Mode',
+        name: 'updateRssFeedMode',
+        type: 'options',
+        options: [
+          { name: 'Keep Current', value: '' },
+          { name: 'Draft', value: 'draft' },
+          { name: 'Publish', value: 'publish' },
+        ],
+        default: '',
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['update'] } },
+        description: 'Draft: new items land as draft posts for review. Publish: auto-published.',
+      },
+      {
+        displayName: 'Enabled',
+        name: 'rssFeedEnabled',
+        type: 'boolean',
+        default: true,
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['update'] } },
+        description: 'Whether the feed is polled',
+      },
+
       // ── Media Operations ─────────────────────────────────────
       {
         displayName: 'Operation',
@@ -320,6 +488,7 @@ export class BulkPublish implements INodeType {
         displayOptions: { show: { resource: ['media'] } },
         options: [
           { name: 'Upload', value: 'upload', action: 'Upload a media file' },
+          { name: 'Upload Large File', value: 'uploadLarge', action: 'Upload a large file via chunked multipart upload' },
           { name: 'List', value: 'list', action: 'List media files' },
           { name: 'Get', value: 'get', action: 'Get a media file' },
           { name: 'Delete', value: 'delete', action: 'Delete a media file' },
@@ -334,6 +503,15 @@ export class BulkPublish implements INodeType {
         required: true,
         displayOptions: { show: { resource: ['media'], operation: ['upload'] } },
         description: 'Name of the binary property containing the file to upload',
+      },
+      {
+        displayName: 'Binary Property',
+        name: 'largeBinaryProperty',
+        type: 'string',
+        default: 'data',
+        required: true,
+        displayOptions: { show: { resource: ['media'], operation: ['uploadLarge'] } },
+        description: 'Name of the binary property containing the file. Uses the chunked multipart flow (10MB parts, each part retried independently) — videos up to 1GB, images up to 100MB.',
       },
       {
         displayName: 'Media ID',
@@ -786,6 +964,56 @@ export class BulkPublish implements INodeType {
             json: false,
           });
           if (typeof responseData === 'string') responseData = JSON.parse(responseData);
+        } else if (operation === 'uploadLarge') {
+          // Chunked multipart upload — videos up to 1GB, images up to 100MB.
+          // 10MB parts; a failed part can be retried alone without restarting the file.
+          const binaryProperty = this.getNodeParameter('largeBinaryProperty', i) as string;
+          const binaryData = this.helpers.assertBinaryData(i, binaryProperty);
+          const buffer = await this.helpers.getBinaryDataBuffer(i, binaryProperty);
+
+          const createRes = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'POST', url: `${BASE_URL}/api/media/multipart/create`, json: true,
+            body: { contentType: binaryData.mimeType, sizeBytes: buffer.length },
+          });
+          const { r2Key, uploadId, partSize, partUrls } = createRes as {
+            r2Key: string; uploadId: string; partSize: number; partUrls: string[];
+          };
+
+          try {
+            const parts: Array<{ partNumber: number; etag: string }> = [];
+            for (let p = 0; p < partUrls.length; p++) {
+              const slice = buffer.subarray(p * partSize, Math.min((p + 1) * partSize, buffer.length));
+              const putRes = await this.helpers.httpRequest({
+                method: 'PUT', url: partUrls[p], body: slice,
+                headers: { 'Content-Type': 'application/octet-stream' },
+                returnFullResponse: true,
+              });
+              const etag = (putRes.headers?.etag || putRes.headers?.ETag || '') as string;
+              if (!etag) {
+                throw new NodeOperationError(this.getNode(), `Multipart upload: no ETag returned for part ${p + 1}`, { itemIndex: i });
+              }
+              parts.push({ partNumber: p + 1, etag });
+            }
+
+            responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+              method: 'POST', url: `${BASE_URL}/api/media/multipart/complete`, json: true,
+              body: {
+                r2Key, uploadId, parts,
+                fileName: binaryData.fileName || 'upload',
+                mimeType: binaryData.mimeType,
+                sizeBytes: buffer.length,
+              },
+            });
+          } catch (error) {
+            // Best-effort abort so stored parts are freed
+            try {
+              await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+                method: 'POST', url: `${BASE_URL}/api/media/multipart/abort`, json: true,
+                body: { r2Key, uploadId },
+              });
+            } catch { /* ignore abort failures */ }
+            throw error;
+          }
         } else if (operation === 'list') {
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'GET', url: `${BASE_URL}/api/media`, json: true,
@@ -831,6 +1059,82 @@ export class BulkPublish implements INodeType {
           const id = this.getNodeParameter('labelId', i) as number;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'DELETE', url: `${BASE_URL}/api/labels/${id}`, json: true,
+          });
+        }
+      }
+
+      // ── Channel Sets ───────────────────────────────────────
+      else if (resource === 'channelSet') {
+        if (operation === 'create') {
+          const idsStr = this.getNodeParameter('channelSetChannelIds', i) as string;
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'POST', url: `${BASE_URL}/api/channel-sets`, json: true,
+            body: {
+              name: this.getNodeParameter('channelSetName', i) as string,
+              channelIds: idsStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean),
+            },
+          });
+        } else if (operation === 'list') {
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'GET', url: `${BASE_URL}/api/channel-sets`, json: true,
+          });
+        } else if (operation === 'update') {
+          const id = this.getNodeParameter('channelSetId', i) as number;
+          const body: any = {};
+          const name = this.getNodeParameter('updateChannelSetName', i, '') as string;
+          if (name) body.name = name;
+          const idsStr = this.getNodeParameter('updateChannelSetChannelIds', i, '') as string;
+          if (idsStr) body.channelIds = idsStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
+          if (Object.keys(body).length === 0) {
+            throw new NodeOperationError(this.getNode(), 'Provide a new Set Name and/or Channel IDs to update', { itemIndex: i });
+          }
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'PUT', url: `${BASE_URL}/api/channel-sets/${id}`, body, json: true,
+          });
+        } else if (operation === 'delete') {
+          const id = this.getNodeParameter('channelSetId', i) as number;
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'DELETE', url: `${BASE_URL}/api/channel-sets/${id}`, json: true,
+          });
+        }
+      }
+
+      // ── RSS Feeds ──────────────────────────────────────────
+      else if (resource === 'rssFeed') {
+        if (operation === 'create') {
+          const idsStr = this.getNodeParameter('rssFeedChannelIds', i) as string;
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'POST', url: `${BASE_URL}/api/rss-feeds`, json: true,
+            body: {
+              name: this.getNodeParameter('rssFeedName', i) as string,
+              feedUrl: this.getNodeParameter('rssFeedUrl', i) as string,
+              channelIds: idsStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean),
+              mode: this.getNodeParameter('rssFeedMode', i, 'draft') as string,
+            },
+          });
+        } else if (operation === 'list') {
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'GET', url: `${BASE_URL}/api/rss-feeds`, json: true,
+          });
+        } else if (operation === 'update') {
+          const id = this.getNodeParameter('rssFeedId', i) as number;
+          const body: any = {};
+          const name = this.getNodeParameter('updateRssFeedName', i, '') as string;
+          if (name) body.name = name;
+          const feedUrl = this.getNodeParameter('updateRssFeedUrl', i, '') as string;
+          if (feedUrl) body.feedUrl = feedUrl;
+          const idsStr = this.getNodeParameter('updateRssFeedChannelIds', i, '') as string;
+          if (idsStr) body.channelIds = idsStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
+          const mode = this.getNodeParameter('updateRssFeedMode', i, '') as string;
+          if (mode) body.mode = mode;
+          body.enabled = this.getNodeParameter('rssFeedEnabled', i, true) as boolean;
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'PUT', url: `${BASE_URL}/api/rss-feeds/${id}`, body, json: true,
+          });
+        } else if (operation === 'delete') {
+          const id = this.getNodeParameter('rssFeedId', i) as number;
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'DELETE', url: `${BASE_URL}/api/rss-feeds/${id}`, json: true,
           });
         }
       }

@@ -48,8 +48,15 @@ npm install n8n-nodes-bulkpublish
 - **Get Options** — Get platform-specific options (Pinterest boards, YouTube playlists)
 - **Mentions Search** — Search users for @mention (X, Bluesky)
 
+### Channel Set
+- **Create** — Save a named group of channels for one-click targeting (max 50 sets per organization; names are unique — duplicates return a 409 `DUPLICATE_NAME` error)
+- **List** — List channel sets
+- **Update** — Rename a set or change its channels
+- **Delete** — Delete a channel set
+
 ### Media
 - **Upload** — Upload an image or video file
+- **Upload Large File** — Chunked multipart upload for large files (videos up to 1GB, images up to 100MB). The file is sent in 10MB parts; each part is retried independently, so a network drop never restarts the whole file. Note: the whole file is buffered in n8n memory before upload — make sure your n8n instance has enough RAM for the file size.
 - **Get** — Get a media file by ID
 - **List** — List uploaded media files
 - **Delete** — Delete a media file
@@ -69,6 +76,12 @@ npm install n8n-nodes-bulkpublish
 - **Create** — Create a recurring schedule (frequency + time of day)
 - **Update** — Update a schedule
 - **Delete** — Delete a schedule
+
+### RSS Feed
+- **Create** — Add an RSS/Atom feed for autoposting (polled every 15 min; new items become posts). `mode` defaults to `draft` (items land as drafts for review); set `publish` to auto-publish. Max 20 feeds per organization.
+- **List** — List RSS feeds (includes `lastCheckedAt` and `lastError`)
+- **Update** — Change name, URL, channels, mode, or enabled. Changing the feed URL re-baselines the feed — only items newer than the change are posted.
+- **Delete** — Delete an RSS feed
 
 ### Quota
 - **Usage** — Get current plan limits and usage

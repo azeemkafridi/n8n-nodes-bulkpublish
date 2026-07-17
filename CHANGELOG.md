@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 (2026-07-17)
+
+### Added
+
+- **New resource: Channel Set** — Create / List / Update / Delete saved channel groups (`/api/channel-sets`). Max 50 sets per organization; names are unique per org (duplicates return 409 `DUPLICATE_NAME`). Update requires at least one of name/channel IDs.
+- **New resource: RSS Feed** — Create / List / Update / Delete RSS autopost feeds (`/api/rss-feeds`). Feeds are polled every 15 minutes; new items become posts. `mode` defaults to **draft** (items land as draft posts for review) — set publish to auto-publish. Max 20 feeds per organization. Changing a feed's URL re-baselines it: only items newer than the change are posted.
+- **Media → Upload Large File** — chunked multipart upload (`/api/media/multipart/create|complete|abort`) for videos up to 1GB and images up to 100MB. Files are sent in 10MB parts; on any failure the upload is aborted server-side so stored parts are freed. Note: n8n buffers the whole binary in memory before upload.
+
 ## 1.2.0 (2026-07-16)
 
 ### Fixed
