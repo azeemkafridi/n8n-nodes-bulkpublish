@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1 (2026-07-18)
+
+### Changed
+
+- **RSS Feed field-mapping help text**: Documented that a feed item's own extra leaf fields (namespaced or not) can be used as `{fieldName}` caption tokens in addition to the standard set — the webapp editor surfaces a feed's real fields as pills after a preview. Docs/prose only; the `template` string is forwarded unchanged.
+
 ## 1.4.0 (2026-07-18)
 
 ### Added

@@ -431,7 +431,7 @@ export class BulkPublish implements INodeType {
         type: 'json',
         default: '',
         displayOptions: { show: { resource: ['rssFeed'], operation: ['create'] } },
-        description: 'How each feed item becomes a post, as a JSON object — e.g. {"template": "{title}\\n\\n{link}", "mediaField": "auto", "hashtags": "#blog", "channelOverrides": {"2": {"template": "{title} {link}"}}}. Fields: template (tokens {title} {link} {description} {content} {author} {categories} {feedName}), mediaField (none/image/video/auto), stripHtml (default true), truncate (smart/hard/skip), hashtags, channelOverrides (per-channel text overrides keyed by channel ID). Leave empty for the server default ({title} then the link, no media).',
+        description: 'How each feed item becomes a post, as a JSON object — e.g. {"template": "{title}\\n\\n{link}", "mediaField": "auto", "hashtags": "#blog", "channelOverrides": {"2": {"template": "{title} {link}"}}}. Fields: template (tokens {title} {link} {description} {content} {author} {categories} {feedName}, plus any extra field on the feed item as {fieldName}), mediaField (none/image/video/auto), stripHtml (default true), truncate (smart/hard/skip), hashtags, channelOverrides (per-channel text overrides keyed by channel ID). Leave empty for the server default ({title} then the link, no media).',
       },
       {
         displayName: 'RSS Feed ID',
@@ -484,7 +484,7 @@ export class BulkPublish implements INodeType {
         type: 'json',
         default: '',
         displayOptions: { show: { resource: ['rssFeed'], operation: ['update'] } },
-        description: 'How each feed item becomes a post, as a JSON object — e.g. {"template": "{title}\\n\\n{link}", "mediaField": "auto", "hashtags": "#blog", "channelOverrides": {"2": {"template": "{title} {link}"}}}. Fields: template (tokens {title} {link} {description} {content} {author} {categories} {feedName}), mediaField (none/image/video/auto), stripHtml (default true), truncate (smart/hard/skip), hashtags, channelOverrides (per-channel text overrides keyed by channel ID). Leave empty for the server default ({title} then the link, no media). Pass the literal value null to clear the mapping back to the server default. Leave empty to keep current.',
+        description: 'How each feed item becomes a post, as a JSON object — e.g. {"template": "{title}\\n\\n{link}", "mediaField": "auto", "hashtags": "#blog", "channelOverrides": {"2": {"template": "{title} {link}"}}}. Fields: template (tokens {title} {link} {description} {content} {author} {categories} {feedName}, plus any extra field on the feed item as {fieldName}), mediaField (none/image/video/auto), stripHtml (default true), truncate (smart/hard/skip), hashtags, channelOverrides (per-channel text overrides keyed by channel ID). Leave empty for the server default ({title} then the link, no media). Pass the literal value null to clear the mapping back to the server default. Leave empty to keep current.',
       },
       {
         displayName: 'Enabled',
