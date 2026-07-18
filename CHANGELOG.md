@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 (2026-07-18)
+
+### Added
+
+- **RSS Feed: Field Mapping (JSON)** on Create and Update — the new `fieldMapping` API field controlling how each feed item becomes a post: caption `template` (tokens `{title} {link} {description} {content} {author} {categories} {feedName}`), `mediaField` (`none` default / `image` / `video` / `auto`; the enclosure is re-hosted to the media library and media-required platforms are skipped for items without a usable one), `stripHtml` (default true), `truncate` (`smart` default / `hard` / `skip`), `hashtags`, and per-channel text `channelOverrides` keyed by channel ID. On Update, pass the literal JSON `null` to clear the mapping back to the server default; leave empty to keep current.
+
 ## 1.3.0 (2026-07-17)
 
 ### Added

@@ -426,6 +426,14 @@ export class BulkPublish implements INodeType {
         description: 'Draft (the default): new feed items land as draft posts for review. Publish: new items are auto-published.',
       },
       {
+        displayName: 'Field Mapping (JSON)',
+        name: 'rssFeedFieldMapping',
+        type: 'json',
+        default: '',
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['create'] } },
+        description: 'How each feed item becomes a post, as a JSON object — e.g. {"template": "{title}\\n\\n{link}", "mediaField": "auto", "hashtags": "#blog", "channelOverrides": {"2": {"template": "{title} {link}"}}}. Fields: template (tokens {title} {link} {description} {content} {author} {categories} {feedName}), mediaField (none/image/video/auto), stripHtml (default true), truncate (smart/hard/skip), hashtags, channelOverrides (per-channel text overrides keyed by channel ID). Leave empty for the server default ({title} then the link, no media).',
+      },
+      {
         displayName: 'RSS Feed ID',
         name: 'rssFeedId',
         type: 'number',
@@ -469,6 +477,14 @@ export class BulkPublish implements INodeType {
         default: '',
         displayOptions: { show: { resource: ['rssFeed'], operation: ['update'] } },
         description: 'Draft: new items land as draft posts for review. Publish: auto-published.',
+      },
+      {
+        displayName: 'Field Mapping (JSON)',
+        name: 'updateRssFeedFieldMapping',
+        type: 'json',
+        default: '',
+        displayOptions: { show: { resource: ['rssFeed'], operation: ['update'] } },
+        description: 'How each feed item becomes a post, as a JSON object — e.g. {"template": "{title}\\n\\n{link}", "mediaField": "auto", "hashtags": "#blog", "channelOverrides": {"2": {"template": "{title} {link}"}}}. Fields: template (tokens {title} {link} {description} {content} {author} {categories} {feedName}), mediaField (none/image/video/auto), stripHtml (default true), truncate (smart/hard/skip), hashtags, channelOverrides (per-channel text overrides keyed by channel ID). Leave empty for the server default ({title} then the link, no media). Pass the literal value null to clear the mapping back to the server default. Leave empty to keep current.',
       },
       {
         displayName: 'Enabled',
@@ -1110,6 +1126,12 @@ export class BulkPublish implements INodeType {
               feedUrl: this.getNodeParameter('rssFeedUrl', i) as string,
               channelIds: idsStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean),
               mode: this.getNodeParameter('rssFeedMode', i, 'draft') as string,
+              ...(() => {
+                const raw = this.getNodeParameter('rssFeedFieldMapping', i, '') as string | object;
+                if (!raw) return {};
+                const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                return parsed ? { fieldMapping: parsed } : {};
+              })(),
             },
           });
         } else if (operation === 'list') {
@@ -1127,6 +1149,11 @@ export class BulkPublish implements INodeType {
           if (idsStr) body.channelIds = idsStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter(Boolean);
           const mode = this.getNodeParameter('updateRssFeedMode', i, '') as string;
           if (mode) body.mode = mode;
+          const rawMapping = this.getNodeParameter('updateRssFeedFieldMapping', i, '') as string | object;
+          if (rawMapping !== '' && rawMapping !== undefined) {
+            // The literal string "null" (or JSON null) clears the mapping back to the server default.
+            body.fieldMapping = typeof rawMapping === 'string' ? JSON.parse(rawMapping) : rawMapping;
+          }
           body.enabled = this.getNodeParameter('rssFeedEnabled', i, true) as boolean;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'PUT', url: `${BASE_URL}/api/rss-feeds/${id}`, body, json: true,

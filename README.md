@@ -78,7 +78,7 @@ npm install n8n-nodes-bulkpublish
 - **Delete** — Delete a schedule
 
 ### RSS Feed
-- **Create** — Add an RSS/Atom feed for autoposting (polled every 15 min; new items become posts). `mode` defaults to `draft` (items land as drafts for review); set `publish` to auto-publish. Max 20 feeds per organization.
+- **Create** — Add an RSS/Atom feed for autoposting (polled every 15 min; new items become posts). `mode` defaults to `draft` (items land as drafts for review); set `publish` to auto-publish. Max 20 feeds per organization. Optional **Field Mapping (JSON)** controls how items render (caption template with item tokens, media selection, HTML stripping, truncation, hashtags, per-channel overrides).
 - **List** — List RSS feeds (includes `lastCheckedAt` and `lastError`)
 - **Update** — Change name, URL, channels, mode, or enabled. Changing the feed URL re-baselines the feed — only items newer than the change are posted.
 - **Delete** — Delete an RSS feed
