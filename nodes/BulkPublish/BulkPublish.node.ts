@@ -57,6 +57,8 @@ export class BulkPublish implements INodeType {
           { name: 'Delete', value: 'delete', action: 'Delete a post' },
           { name: 'Publish', value: 'publish', action: 'Publish a draft immediately' },
           { name: 'Retry', value: 'retry', action: 'Retry failed platforms' },
+          { name: 'Approve', value: 'approve', action: 'Approve a pending post' },
+          { name: 'Reject', value: 'reject', action: 'Reject a pending post' },
           { name: 'Metrics', value: 'metrics', action: 'Get post metrics' },
           { name: 'Story Publish', value: 'storyPublish', action: 'Publish a story' },
           { name: 'Bulk Operations', value: 'bulk', action: 'Bulk delete or retry posts' },
@@ -172,6 +174,14 @@ export class BulkPublish implements INodeType {
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
         description: 'Thread parts array: [{"content": "Part 1"}, {"content": "Part 2"}]. Required when Post Format is "thread".',
       },
+      {
+        displayName: 'Request Approval',
+        name: 'requestApproval',
+        type: 'boolean',
+        default: false,
+        displayOptions: { show: { resource: ['post'], operation: ['create'] } },
+        description: 'Hold the scheduled post as pending team approval — the scheduler skips it until someone with the post:approve permission (owner/admin/approver) approves it. Defaults to false. NOTE: for API keys of roles without post:publish (contributors) the server forces this to true regardless of what is sent.',
+      },
 
       // Post: Get/Update/Delete/Publish/Retry — ID
       {
@@ -180,7 +190,18 @@ export class BulkPublish implements INodeType {
         type: 'number',
         default: 0,
         required: true,
-        displayOptions: { show: { resource: ['post'], operation: ['get', 'update', 'delete', 'publish', 'retry', 'metrics', 'storyPublish'] } },
+        displayOptions: { show: { resource: ['post'], operation: ['get', 'update', 'delete', 'publish', 'retry', 'metrics', 'storyPublish', 'approve', 'reject'] } },
+      },
+
+      // Post: Reject fields
+      {
+        displayName: 'Reason',
+        name: 'rejectionReason',
+        type: 'string',
+        typeOptions: { rows: 2 },
+        default: '',
+        displayOptions: { show: { resource: ['post'], operation: ['reject'] } },
+        description: 'Optional rejection reason (max 2000 chars), stored on the post and shown to the author. Rejecting returns the post to draft.',
       },
 
       // Post: Update fields
@@ -192,6 +213,14 @@ export class BulkPublish implements INodeType {
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['update'] } },
         description: 'New post content (leave empty to keep current)',
+      },
+      {
+        displayName: 'Request Approval',
+        name: 'updateRequestApproval',
+        type: 'boolean',
+        default: false,
+        displayOptions: { show: { resource: ['post'], operation: ['update'] } },
+        description: 'Hold the scheduled post as pending team approval (see the Create option). Only sent when enabled.',
       },
 
       // Post: List filters
@@ -211,6 +240,21 @@ export class BulkPublish implements INodeType {
         ],
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['list'] } },
+      },
+      {
+        displayName: 'Approval Status',
+        name: 'approvalStatusFilter',
+        type: 'options',
+        options: [
+          { name: 'All', value: '' },
+          { name: 'None', value: 'none' },
+          { name: 'Pending', value: 'pending' },
+          { name: 'Approved', value: 'approved' },
+          { name: 'Rejected', value: 'rejected' },
+        ],
+        default: '',
+        displayOptions: { show: { resource: ['post'], operation: ['list'] } },
+        description: 'Filter by team-approval state. Approval is orthogonal to post status — the scheduler skips pending/rejected posts.',
       },
       {
         displayName: 'Limit',
@@ -861,6 +905,9 @@ export class BulkPublish implements INodeType {
             }
           }
 
+          const requestApproval = this.getNodeParameter('requestApproval', i, false) as boolean;
+          if (requestApproval) body.requestApproval = true;
+
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts`, body, json: true,
           });
@@ -873,6 +920,8 @@ export class BulkPublish implements INodeType {
           const qs: any = { limit: this.getNodeParameter('limit', i) };
           const status = this.getNodeParameter('statusFilter', i, '') as string;
           if (status) qs.status = status;
+          const approvalStatus = this.getNodeParameter('approvalStatusFilter', i, '') as string;
+          if (approvalStatus) qs.approvalStatus = approvalStatus;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'GET', url: `${BASE_URL}/api/posts`, qs, json: true,
           });
@@ -881,6 +930,8 @@ export class BulkPublish implements INodeType {
           const body: any = {};
           const content = this.getNodeParameter('updateContent', i, '') as string;
           if (content) body.content = content;
+          const updateRequestApproval = this.getNodeParameter('updateRequestApproval', i, false) as boolean;
+          if (updateRequestApproval) body.requestApproval = true;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'PUT', url: `${BASE_URL}/api/posts/${id}`, body, json: true,
           });
@@ -898,6 +949,18 @@ export class BulkPublish implements INodeType {
           const id = this.getNodeParameter('postId', i) as number;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts/${id}/retry`, json: true,
+          });
+        } else if (operation === 'approve') {
+          const id = this.getNodeParameter('postId', i) as number;
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'POST', url: `${BASE_URL}/api/posts/${id}/approve`, json: true,
+          });
+        } else if (operation === 'reject') {
+          const id = this.getNodeParameter('postId', i) as number;
+          const reason = this.getNodeParameter('rejectionReason', i, '') as string;
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+            method: 'POST', url: `${BASE_URL}/api/posts/${id}/reject`, json: true,
+            body: reason ? { reason } : {},
           });
         } else if (operation === 'metrics') {
           const id = this.getNodeParameter('postId', i) as number;

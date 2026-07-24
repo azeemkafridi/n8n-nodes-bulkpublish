@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 (2026-07-24)
+
+### Added
+
+- **Post → Approve / Reject** — new operations for the team-approval flow. Approve (`POST /api/posts/{id}/approve`, no body) publishes immediately if the post's `scheduledAt` has already passed; Reject (`POST /api/posts/{id}/reject`) takes an optional **Reason** (max 2000 chars) and returns the post to draft with the reason. Both require a role with `post:approve` (owner/admin/approver) and return 400 if the post isn't pending.
+- **Post → Create/Update: Request Approval** boolean (default false) — holds a scheduled post as pending team approval; the scheduler skips pending/rejected posts. The server forces this on for API keys of roles without `post:publish` (contributors).
+- **Post → List: Approval Status** filter (`none` / `pending` / `approved` / `rejected`). Post objects now include `approvalStatus`, `approvedBy`, `approvedAt`, and `rejectionReason` (returned as-is, orthogonal to post status).
+- Note: Publish and Retry now return 403 `APPROVAL_REQUIRED` for roles without `post:publish`.
+
 ## 1.4.1 (2026-07-18)
 
 ### Changed
