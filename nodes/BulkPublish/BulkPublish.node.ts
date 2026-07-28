@@ -59,7 +59,13 @@ export class BulkPublish implements INodeType {
           { name: 'Retry', value: 'retry', action: 'Retry failed platforms' },
           { name: 'Approve', value: 'approve', action: 'Approve a pending post' },
           { name: 'Reject', value: 'reject', action: 'Reject a pending post' },
-          { name: 'Metrics', value: 'metrics', action: 'Get post metrics' },
+          {
+            name: 'Metrics',
+            value: 'metrics',
+            action: 'Get post metrics',
+            description:
+              'Engagement metrics per platform. Each platform entry carries supportedMetrics — any metric key not in that list is stored as 0 because the platform has no such field, so do not treat it as a measurement. X reports no reach/saves/clicks/video views, Bluesky and Mastodon no impressions, Pinterest no reach, YouTube no shares or reach.',
+          },
           { name: 'Story Publish', value: 'storyPublish', action: 'Publish a story' },
           { name: 'Bulk Operations', value: 'bulk', action: 'Bulk delete or retry posts' },
           { name: 'Queue Slot', value: 'queueSlot', action: 'Get the next queue slot' },
@@ -647,7 +653,13 @@ export class BulkPublish implements INodeType {
         displayOptions: { show: { resource: ['analytics'] } },
         options: [
           { name: 'Summary', value: 'summary', action: 'Get analytics summary' },
-          { name: 'Engagement', value: 'engagement', action: 'Get engagement data' },
+          {
+            name: 'Engagement',
+            value: 'engagement',
+            action: 'Get engagement data',
+            description:
+              'Totals plus per-post breakdown. Read supportedTotals before using a total* field: a key missing from it is not reported by ANY platform in the window and is 0 only because the column defaults to 0. metricSupport gives the per-platform lists, partialTotals names platforms excluded from an otherwise-real total, and metricsDisabledChannels lists channels whose sync is off (X only — its reads are billed, so sync is opt-in per channel and at most weekly).',
+          },
         ],
         default: 'summary',
       },

@@ -36,7 +36,7 @@ npm install n8n-nodes-bulkpublish
 - **Delete** — Delete a post
 - **Publish** — Publish a draft immediately
 - **Retry** — Retry failed platforms
-- **Metrics** — Get engagement metrics (impressions, likes, comments, shares)
+- **Metrics** — Get engagement metrics (impressions, likes, comments, shares) — see [Reading metrics safely](#reading-metrics-safely)
 - **Story Publish** — Publish as a story to Facebook or Instagram
 - **Bulk Operations** — Bulk delete or retry multiple posts
 - **Queue Slot** — Get the next optimal time slot for a channel
@@ -85,6 +85,46 @@ npm install n8n-nodes-bulkpublish
 
 ### Quota
 - **Usage** — Get current plan limits and usage
+
+## Reading metrics safely
+
+Every metric column is stored as an integer defaulting to `0`, so **a `0` does
+not always mean zero engagement** — it may mean the platform has no such metric
+at all. Branch on the support fields, not on the number.
+
+- `Post → Metrics` returns `metricsSupported` and `supportedMetrics` on each
+  platform entry. A key absent from `supportedMetrics` is not a measurement.
+- `Analytics → Engagement` returns `supportedTotals` (the union across the
+  window — treat a `total*` field whose key is missing as "not available"),
+  `metricSupport` (per-platform lists), `partialTotals` (platforms excluded from
+  an otherwise-real total) and `conditionalMetrics` (supported but
+  permission-gated).
+
+| Platform | Reports | Never reports |
+|---|---|---|
+| X | impressions, likes, comments, shares | reach, saves, clicks, video views |
+| YouTube | impressions, video views, likes, comments | reach, shares, saves, clicks |
+| Instagram | impressions, reach, likes, comments, shares, saves | clicks, video views |
+| Facebook | likes, comments, shares + impressions, reach, clicks¹ | saves, video views |
+| LinkedIn (company pages) | impressions, reach, likes, comments, shares, clicks | saves, video views |
+| TikTok | impressions, video views, likes, comments, shares | reach, saves, clicks |
+| Threads | impressions, likes, comments, shares | reach, saves, clicks, video views |
+| Pinterest | impressions, clicks, saves, likes, comments, video views | reach |
+| Bluesky | likes, comments, shares, saves (bookmarks) | impressions, reach, clicks, video views |
+| Mastodon | likes, comments, shares | everything else |
+| Google Business, Reddit, Discord, Telegram, Tumblr | *nothing* | — |
+| LinkedIn personal profiles | *nothing* | — |
+
+¹ Facebook's impressions/reach/clicks come from Page Insights and need the
+`read_insights` permission; without it they stay `0`.
+
+`engagementRate` is derived from impressions, so it is always `0` where
+impressions are unsupported (Bluesky, Mastodon).
+
+Two other legitimate zeroes: figures come from a snapshot refreshed every 6
+hours (a just-published post starts at zero), and X's per-post sync is **opt-in
+per channel** and runs at most weekly because X bills every read — affected
+channels are listed in `metricsDisabledChannels`.
 
 ## Example Workflows
 

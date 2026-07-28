@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.0 (2026-07-28)
+
+### Added
+
+- **Per-metric platform support surfaced on Metrics and Engagement.** `Post -> Metrics` entries carry `metricsSupported` and `supportedMetrics`; `Analytics -> Engagement` adds `metricSupport`, `supportedTotals`, `partialTotals`, `conditionalMetrics` and `metricsDisabledChannels`. Both operations now describe the rule in the node UI, and the README gains a "Reading metrics safely" section with the full per-platform table.
+
+### Fixed
+
+- **A `0` was indistinguishable from "this platform has no such metric".** Every metric column is stored as an integer defaulting to 0, so a workflow branching on `clicks` for an X post saw a confident `0` forever — X has no clicks field. Branch on `supportedMetrics` / `supportedTotals` instead of the number.
+- Server-side, three platforms were under-reporting: Pinterest pins always returned 0 likes and 0 comments, Threads posts returned no metrics at all, and Bluesky returned no saves. All three are fixed and start populating with no workflow changes.
+
 ## 1.5.0 (2026-07-24)
 
 ### Added
