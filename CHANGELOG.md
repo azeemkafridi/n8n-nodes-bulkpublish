@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.0 (2026-08-01)
+
+### Added
+
+- **Link Tracking on `Post -> Create` and `Post -> Update`.** Per-post override for bulkpubli.sh link tracking: "On" shortens the links in the post and counts their clicks, "Off" publishes them as written, and "Inherit Organization Setting" follows the org-level Link Tracking toggle. Update also offers "Leave Unchanged" (the default) — picking "Inherit" there sends an explicit `null` to *clear* a previously-set override, which omitting the field would not do.
+- **Sort By / Sort Order on `Analytics -> Engagement`.** Sorts the `allPosts` breakdown by `date` (default), `impressions`, `likes`, `comments`, `shares` or `linkClicks`. Only sent for Engagement — the Summary endpoint has no such parameters.
+- **`linkClicks` / `totalLinkClicks` documented on Engagement.** Clicks on bulkpubli.sh short links, measured by BulkPublish rather than reported by the platform, so they are available even for platforms that report no per-post metrics at all.
+
+### Notes
+
+`linkClicks` is deliberately **not** part of `totalClicks` — the platform's own click figure and ours can both register the same visit, so adding them double-counts. Shortening is skipped for any channel where the rewritten text would exceed that platform's character limit (a short URL is 28 characters and can be longer than the link it replaces); the post still publishes, with its original links, and `linkClicks` stays 0 for that channel.
+
 ## 1.6.0 (2026-07-28)
 
 ### Added

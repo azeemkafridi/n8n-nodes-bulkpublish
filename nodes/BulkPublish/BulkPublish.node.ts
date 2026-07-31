@@ -188,6 +188,19 @@ export class BulkPublish implements INodeType {
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
         description: 'Hold the scheduled post as pending team approval — the scheduler skips it until someone with the post:approve permission (owner/admin/approver) approves it. Defaults to false. NOTE: for API keys of roles without post:publish (contributors) the server forces this to true regardless of what is sent.',
       },
+      {
+        displayName: 'Link Tracking',
+        name: 'linkTrackingOverride',
+        type: 'options',
+        options: [
+          { name: 'Inherit Organization Setting', value: 'inherit' },
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        ],
+        default: 'inherit',
+        displayOptions: { show: { resource: ['post'], operation: ['create'] } },
+        description: 'Per-post override for link tracking (bulkpubli.sh). "On" shortens the links in this post and counts their clicks, "Off" publishes them as written, and "Inherit" (the default) follows the organization Link Tracking setting. Links are rewritten at publish time, per channel, so two accounts on the same platform get separate codes. Shortening is skipped for a channel when the rewrite would push the post past that platform character limit — a short URL is 28 characters and can be longer than the link it replaces.',
+      },
 
       // Post: Get/Update/Delete/Publish/Retry — ID
       {
@@ -227,6 +240,20 @@ export class BulkPublish implements INodeType {
         default: false,
         displayOptions: { show: { resource: ['post'], operation: ['update'] } },
         description: 'Hold the scheduled post as pending team approval (see the Create option). Only sent when enabled.',
+      },
+      {
+        displayName: 'Link Tracking',
+        name: 'updateLinkTrackingOverride',
+        type: 'options',
+        options: [
+          { name: 'Leave Unchanged', value: 'unchanged' },
+          { name: 'Inherit Organization Setting', value: 'inherit' },
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        ],
+        default: 'unchanged',
+        displayOptions: { show: { resource: ['post'], operation: ['update'] } },
+        description: 'Per-post override for link tracking (bulkpubli.sh). "On" shortens the links in this post and counts their clicks, "Off" publishes them as written, and "Inherit" clears the override so the post follows the organization Link Tracking setting again. "Leave Unchanged" (the default) sends nothing.',
       },
 
       // Post: List filters
@@ -658,7 +685,7 @@ export class BulkPublish implements INodeType {
             value: 'engagement',
             action: 'Get engagement data',
             description:
-              'Totals plus per-post breakdown. Read supportedTotals before using a total* field: a key missing from it is not reported by ANY platform in the window and is 0 only because the column defaults to 0. metricSupport gives the per-platform lists, partialTotals names platforms excluded from an otherwise-real total, and metricsDisabledChannels lists channels whose sync is off (X only — its reads are billed, so sync is opt-in per channel and at most weekly).',
+              'Totals plus per-post breakdown. Read supportedTotals before using a total* field: a key missing from it is not reported by ANY platform in the window and is 0 only because the column defaults to 0. metricSupport gives the per-platform lists, partialTotals names platforms excluded from an otherwise-real total, and metricsDisabledChannels lists channels whose sync is off (X only — its reads are billed, so sync is opt-in per channel and at most weekly). linkClicks and totalLinkClicks count clicks on bulkpubli.sh short links, measured by BulkPublish rather than the platform — available on every platform including the unmeasurable ones, and deliberately NOT part of totalClicks, so never add the two together.',
           },
         ],
         default: 'summary',
@@ -678,6 +705,34 @@ export class BulkPublish implements INodeType {
         default: '',
         required: true,
         displayOptions: { show: { resource: ['analytics'] } },
+      },
+      {
+        displayName: 'Sort By',
+        name: 'analyticsSort',
+        type: 'options',
+        options: [
+          { name: 'Date', value: 'date' },
+          { name: 'Impressions', value: 'impressions' },
+          { name: 'Likes', value: 'likes' },
+          { name: 'Comments', value: 'comments' },
+          { name: 'Shares', value: 'shares' },
+          { name: 'Link Clicks', value: 'linkClicks' },
+        ],
+        default: 'date',
+        displayOptions: { show: { resource: ['analytics'], operation: ['engagement'] } },
+        description: 'Sort field for the allPosts breakdown. "Link Clicks" sorts by bulkpubli.sh short-link click count.',
+      },
+      {
+        displayName: 'Sort Order',
+        name: 'analyticsOrder',
+        type: 'options',
+        options: [
+          { name: 'Descending', value: 'desc' },
+          { name: 'Ascending', value: 'asc' },
+        ],
+        default: 'desc',
+        displayOptions: { show: { resource: ['analytics'], operation: ['engagement'] } },
+        description: 'Sort direction for the allPosts breakdown',
       },
 
       // ── Schedule Operations ──────────────────────────────────
@@ -920,6 +975,12 @@ export class BulkPublish implements INodeType {
           const requestApproval = this.getNodeParameter('requestApproval', i, false) as boolean;
           if (requestApproval) body.requestApproval = true;
 
+          // 'inherit' is the server default (null), so it is sent as null rather
+          // than omitted — either way the post follows the organization setting.
+          const linkTracking = this.getNodeParameter('linkTrackingOverride', i, 'inherit') as string;
+          if (linkTracking === 'on') body.linkTrackingOverride = true;
+          else if (linkTracking === 'off') body.linkTrackingOverride = false;
+
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts`, body, json: true,
           });
@@ -944,6 +1005,13 @@ export class BulkPublish implements INodeType {
           if (content) body.content = content;
           const updateRequestApproval = this.getNodeParameter('updateRequestApproval', i, false) as boolean;
           if (updateRequestApproval) body.requestApproval = true;
+
+          // Here 'inherit' must send an explicit null: omitting it would leave a
+          // previously-set override in place instead of clearing it.
+          const updateLinkTracking = this.getNodeParameter('updateLinkTrackingOverride', i, 'unchanged') as string;
+          if (updateLinkTracking === 'on') body.linkTrackingOverride = true;
+          else if (updateLinkTracking === 'off') body.linkTrackingOverride = false;
+          else if (updateLinkTracking === 'inherit') body.linkTrackingOverride = null;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'PUT', url: `${BASE_URL}/api/posts/${id}`, body, json: true,
           });
@@ -1246,9 +1314,18 @@ export class BulkPublish implements INodeType {
         const from = this.getNodeParameter('from', i) as string;
         const to = this.getNodeParameter('to', i) as string;
         const endpoint = operation === 'engagement' ? 'engagement' : 'summary';
+        const qs: any = { from, to };
+        // sort/order apply to allPosts and only exist on the engagement endpoint;
+        // sending them to summary would be silently ignored, so scope them.
+        if (operation === 'engagement') {
+          const sort = this.getNodeParameter('analyticsSort', i, 'date') as string;
+          const order = this.getNodeParameter('analyticsOrder', i, 'desc') as string;
+          if (sort !== 'date') qs.sort = sort;
+          if (order !== 'desc') qs.order = order;
+        }
         responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
           method: 'GET', url: `${BASE_URL}/api/analytics/${endpoint}`,
-          qs: { from, to }, json: true,
+          qs, json: true,
         });
       }
 
