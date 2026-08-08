@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.2 (2026-08-08)
+
+### Changed
+
+- **Platform Specific (JSON) now documents Reddit, Discord, Telegram and Tumblr.** The field description listed options for eight platforms only, so nothing told you Reddit needs `subreddit` or Discord needs `channelId` — a post targeting either failed server-side with no hint from the node. Added their required and optional fields, noted that Telegram takes no options, and documented that `reddit`, `discord` and `tumblr` nest options under the **BulkPublish channel ID** (`{"reddit":{"12":{"subreddit":"webdev"}}}`), with a flat object applying to every channel of that platform.
+- **`reddit.thumbnailUrl` is flagged as REQUIRED on video posts**, explicitly contrasted with `pinterest.coverImageUrl`, which does fall back to a poster frame. Reddit has no such fallback and fails the publish without it.
+
 ## 1.7.1 (2026-08-08)
 
 ### Changed

@@ -170,7 +170,7 @@ export class BulkPublish implements INodeType {
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars). Optional: youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, pinterest.coverImageUrl (video pins — omitted: falls back to the video\'s auto-extracted poster frame), tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, linkedin.url (for article), gmb.ctaType, mastodon.visibility.',
+        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars), reddit.subreddit, discord.channelId. Optional: youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, pinterest.coverImageUrl (video pins — omitted: falls back to the video\'s auto-extracted poster frame), tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, linkedin.url (for article), gmb.ctaType, mastodon.visibility, reddit.title/type/url/flairId/thumbnailUrl, tumblr.blogName/title/tags/link/sourceUrl. Note reddit.thumbnailUrl is REQUIRED on video posts — unlike pinterest.coverImageUrl there is no poster-frame fallback. Telegram takes no options. reddit, discord and tumblr nest their options under the BulkPublish channel ID, e.g. {"reddit":{"12":{"subreddit":"webdev"}}}; a flat object applies to every channel of that platform.',
       },
       {
         displayName: 'Thread Parts (JSON)',
