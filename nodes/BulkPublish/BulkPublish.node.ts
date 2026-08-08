@@ -170,7 +170,7 @@ export class BulkPublish implements INodeType {
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars). Optional: youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, linkedin.url (for article), gmb.ctaType, mastodon.visibility.',
+        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars). Optional: youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, pinterest.coverImageUrl (video pins — omitted: falls back to the video\'s auto-extracted poster frame), tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, linkedin.url (for article), gmb.ctaType, mastodon.visibility.',
       },
       {
         displayName: 'Thread Parts (JSON)',

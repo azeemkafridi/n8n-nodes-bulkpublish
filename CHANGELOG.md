@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.1 (2026-08-08)
+
+### Changed
+
+- **Documented `pinterest.coverImageUrl` in the Platform Specific (JSON) help.** Cover image for Pinterest video pins — optional, since the server now falls back to an attached image, then the video's auto-extracted poster frame. Previously video pins could not carry a cover at all and always failed.
+
 ## 1.7.0 (2026-08-01)
 
 ### Added
