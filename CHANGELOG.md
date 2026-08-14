@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.3 (2026-08-15)
+
+### Changed
+
+- **Metric support matrix re-synced with the server's docs audit.** Reddit now
+  reports likes (score), comments and shares (crossposts); Discord reports
+  likes (reaction counts) and comments (thread replies); X now reports `saves`
+  (bookmarks). The "reports nothing" row shrank to Google Business, Telegram
+  and Tumblr. Doc-only — no node behaviour change.
+
 ## 1.7.2 (2026-08-08)
 
 ### Changed
