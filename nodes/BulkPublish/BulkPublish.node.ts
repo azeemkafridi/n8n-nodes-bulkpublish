@@ -212,6 +212,17 @@ export class BulkPublish implements INodeType {
         displayOptions: { show: { resource: ['post'], operation: ['get', 'update', 'delete', 'publish', 'retry', 'metrics', 'storyPublish', 'approve', 'reject'] } },
       },
 
+      // Post: Retry fields
+      {
+        displayName: 'Republish Unconfirmed Platforms',
+        name: 'republish',
+        type: 'boolean',
+        default: false,
+        description:
+          "Whether to also retry platforms in status 'unconfirmed' (the publish request may have reached the platform but its response was lost — the post may already be live). May DUPLICATE the post — enable only after checking the account and confirming the post is not live. Without it, a post with unconfirmed platforms and no failed ones returns a 400 with code UNCONFIRMED_REQUIRES_REPUBLISH.",
+        displayOptions: { show: { resource: ['post'], operation: ['retry'] } },
+      },
+
       // Post: Reject fields
       {
         displayName: 'Reason',
@@ -1027,8 +1038,10 @@ export class BulkPublish implements INodeType {
           });
         } else if (operation === 'retry') {
           const id = this.getNodeParameter('postId', i) as number;
+          const republish = this.getNodeParameter('republish', i, false) as boolean;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts/${id}/retry`, json: true,
+            ...(republish ? { body: { republish: true } } : {}),
           });
         } else if (operation === 'approve') {
           const id = this.getNodeParameter('postId', i) as number;

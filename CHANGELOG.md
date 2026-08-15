@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.0 (2026-08-15)
+
+### Added
+
+- **Retry: new "Republish Unconfirmed Platforms" toggle** (default off) — maps
+  to the API's new optional `{ "republish": true }` body on
+  `POST /api/posts/{id}/retry`. Platforms can now end in status `unconfirmed`
+  (the publish request may have reached the platform but its response was
+  lost — the post may already be live); they are never auto-retried. Without
+  the toggle, a post with unconfirmed platforms and no failed ones returns a
+  400 with code `UNCONFIRMED_REQUIRES_REPUBLISH`. Enabling it may DUPLICATE
+  the post — only after checking the account and confirming the post is not
+  live.
+
 ## 1.7.3 (2026-08-15)
 
 ### Changed
