@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.9.0 (2026-08-19)
+
+### Added
+
+- **Snapchat support (16th platform).** Platform lists updated everywhere they
+  appear. Post types: `story` (default), `saved_story`, `spotlight`. Every
+  Snapchat post requires exactly ONE media file (jpg/png image or mp4 video;
+  Spotlight is video-only, 6-60s); plain stories carry no text — the caption is
+  only used as the Spotlight description (160 chars) and as a saved-story title
+  fallback. Platform Specific help now covers `snapchat.title` (saved-story
+  title, 45 chars), `snapchat.locale` (Spotlight, default `en_US`) and
+  `snapchat.saveToProfile` (Spotlight, default true) — flat or keyed by channel
+  ID. Metric matrix: Snapchat reports impressions, reach, likes, comments,
+  shares, clicks and video views; never saves. No first comments.
+- Node description and README had drifted to 14 platforms and were missing
+  Tumblr; both now state the full 16-platform list.
+
 ## 1.8.0 (2026-08-15)
 
 ### Added
