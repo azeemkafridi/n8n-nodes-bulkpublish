@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.1 (2026-08-22)
+
+### Changed
+
+- npm package description said "11 social media platforms" while the node's own
+  description already listed 16 (Snapchat included). Corrected to 16 so the npm
+  listing matches the node. No functional change.
+
 ## 1.9.0 (2026-08-19)
 
 ### Added
