@@ -1,10 +1,14 @@
 # n8n-nodes-bulkpublish
 
-n8n community node for [BulkPublish](https://bulkpublish.com) — publish to 16 social media platforms from your n8n workflows.
+n8n community node for [BulkPublish](https://bulkpublish.com) — publish to 15 social media platforms from your n8n workflows.
 
 ## Supported Platforms
 
-Facebook, Instagram, X (Twitter), TikTok, YouTube, Threads, Bluesky, Pinterest, Google Business Profile, LinkedIn, Mastodon, Reddit, Discord, Telegram, Tumblr, Snapchat
+Facebook, Instagram, X (Twitter), TikTok, YouTube, Threads, Bluesky, Pinterest, Google Business Profile, LinkedIn, Mastodon, Discord, Telegram, Tumblr, Snapchat
+
+The node also accepts `reddit`, and channels already connected to it keep
+publishing — but new Reddit connections are paused pending Reddit API approval,
+so it is not counted above.
 
 ## Installation
 

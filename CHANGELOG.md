@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.2 (2026-08-26)
+
+### Changed
+
+- Headline platform count is now 15, matching every other BulkPublish
+  integration. The node still accepts `reddit` and grandfathered Reddit
+  channels keep publishing, but new Reddit connections are paused pending
+  Reddit API approval, so advertising 16 promised something a new user cannot
+  get. The Supported Platforms list says so explicitly now.
+
 ## 1.9.1 (2026-08-22)
 
 ### Changed
