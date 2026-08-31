@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-bulkpublish",
-  "version": "1.9.2",
-  "description": "n8n community node for BulkPublish — publish to 15 social media platforms from n8n workflows",
+  "version": "1.9.3",
+  "description": "n8n community node for BulkPublish \u2014 publish to 15 social media platforms from n8n workflows",
   "keywords": [
     "n8n-community-node-package",
     "n8n-nodes",
@@ -20,7 +20,7 @@
     "pinterest"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/azeemkafridi/n8n-nodes-bulkpublish",
+  "homepage": "https://www.bulkpublish.com",
   "author": {
     "name": "BulkPublish",
     "email": "n8n@bulkpublish.com",

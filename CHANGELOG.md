@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.3 (2026-08-31)
+
+### Changed
+
+- `homepage` now points at https://www.bulkpublish.com rather than the GitHub repo, so the npm
+  listing leads with the product. `repository` still points at GitHub.
+
+
 ## 1.9.2 (2026-08-26)
 
 ### Changed
