@@ -724,14 +724,83 @@ export class BulkPublish implements INodeType {
         options: [
           { name: 'Date', value: 'date' },
           { name: 'Impressions', value: 'impressions' },
+          { name: 'Reach', value: 'reach' },
+          { name: 'Engagements', value: 'engagements' },
+          { name: 'Engagement Rate', value: 'engagementRate' },
           { name: 'Likes', value: 'likes' },
           { name: 'Comments', value: 'comments' },
           { name: 'Shares', value: 'shares' },
+          { name: 'Saves', value: 'saves' },
+          { name: 'Clicks', value: 'clicks' },
+          { name: 'Video Views', value: 'videoViews' },
           { name: 'Link Clicks', value: 'linkClicks' },
         ],
         default: 'date',
         displayOptions: { show: { resource: ['analytics'], operation: ['engagement'] } },
-        description: 'Sort field for the allPosts breakdown. "Link Clicks" sorts by bulkpubli.sh short-link click count.',
+        description: 'Sort field for the allPosts breakdown. "Engagements" is likes + comments + shares + clicks; "Link Clicks" sorts by bulkpubli.sh short-link click count.',
+      },
+      {
+        displayName: 'Filters',
+        name: 'analyticsFilters',
+        type: 'collection',
+        placeholder: 'Add Filter',
+        default: {},
+        displayOptions: { show: { resource: ['analytics'] } },
+        description: 'Narrow every figure to matching posts. A post must match every filter that is set.',
+        options: [
+          {
+            displayName: 'Channel IDs',
+            name: 'channelIds',
+            type: 'string',
+            default: '',
+            description: 'Comma-separated channel IDs, e.g. 12,15. Only rows on these channels count.',
+          },
+          {
+            displayName: 'Platforms',
+            name: 'platforms',
+            type: 'string',
+            default: '',
+            description: 'Comma-separated platform keys, e.g. x,linkedin',
+          },
+          {
+            displayName: 'Label IDs',
+            name: 'labelIds',
+            type: 'string',
+            default: '',
+            description: 'Comma-separated label IDs. A post matches when it carries ANY of them.',
+          },
+          {
+            displayName: 'Post Format',
+            name: 'postFormat',
+            type: 'options',
+            options: [
+              { name: 'Any', value: '' },
+              { name: 'Single Post', value: 'post' },
+              { name: 'Thread', value: 'thread' },
+            ],
+            default: '',
+          },
+          {
+            displayName: 'Media Type',
+            name: 'mediaType',
+            type: 'options',
+            options: [
+              { name: 'Any', value: '' },
+              { name: 'Text Only', value: 'text' },
+              { name: 'Image', value: 'image' },
+              { name: 'Video', value: 'video' },
+            ],
+            default: '',
+            description: 'Decided by the post\'s first media file',
+          },
+          {
+            displayName: 'Compare to Previous Period',
+            name: 'compare',
+            type: 'boolean',
+            default: false,
+            description: 'Whether to also return the equal-length window before From as "previous" / "previousWindow". Available for windows of 15 days or fewer (30-day statistics-retention cap).',
+          },
+        ],
       },
       {
         displayName: 'Sort Order',
@@ -1336,6 +1405,12 @@ export class BulkPublish implements INodeType {
           if (sort !== 'date') qs.sort = sort;
           if (order !== 'desc') qs.order = order;
         }
+        // Shared filters — accepted by both endpoints (same parameter names).
+        const filters = this.getNodeParameter('analyticsFilters', i, {}) as Record<string, any>;
+        for (const key of ['channelIds', 'platforms', 'labelIds', 'postFormat', 'mediaType']) {
+          if (filters[key]) qs[key] = filters[key];
+        }
+        if (filters.compare) qs.compare = '1';
         responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
           method: 'GET', url: `${BASE_URL}/api/analytics/${endpoint}`,
           qs, json: true,

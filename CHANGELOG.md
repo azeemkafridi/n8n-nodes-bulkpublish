@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.10.0 (2026-09-03)
+
+### Added
+
+- **Analytics → Filters** collection on both Summary and Engagement: Channel IDs,
+  Platforms, Label IDs, Post Format (single / thread), Media Type (text / image /
+  video) and Compare to Previous Period. Same parameter names as the API
+  (`channelIds`, `platforms`, `labelIds`, `postFormat`, `mediaType`, `compare=1`).
+- **Engagement → Sort By** gains Reach, Engagements, Engagement Rate, Saves, Clicks
+  and Video Views, matching the server's extended `sort` enum.
+
+
 ## 1.9.3 (2026-08-31)
 
 ### Changed

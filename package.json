@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-bulkpublish",
-  "version": "1.9.3",
+  "version": "1.10.0",
   "description": "n8n community node for BulkPublish \u2014 publish to 15 social media platforms from n8n workflows",
   "keywords": [
     "n8n-community-node-package",
