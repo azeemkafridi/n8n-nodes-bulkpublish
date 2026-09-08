@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.1 (2026-09-09)
+
+### Changed
+
+- Thread Parts (JSON) help text now says every part is checked against the
+  character limit of every platform the post targets, so an over-long part 2
+  fails the whole request rather than failing mid-thread with part 1 already
+  published.
+
 ## 1.10.0 (2026-09-03)
 
 ### Added

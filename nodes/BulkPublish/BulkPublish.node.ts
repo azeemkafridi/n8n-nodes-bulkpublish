@@ -178,7 +178,7 @@ export class BulkPublish implements INodeType {
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Thread parts array: [{"content": "Part 1"}, {"content": "Part 2"}]. Required when Post Format is "thread".',
+        description: 'Thread parts array: [{"content": "Part 1"}, {"content": "Part 2"}]. Required when Post Format is "thread". Every part is checked against the character limit of every platform the post targets, so an over-long part 2 fails the whole request rather than failing mid-thread with part 1 already public.',
       },
       {
         displayName: 'Request Approval',
