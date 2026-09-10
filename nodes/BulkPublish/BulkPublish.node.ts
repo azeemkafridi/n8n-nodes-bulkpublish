@@ -829,6 +829,9 @@ export class BulkPublish implements INodeType {
           { name: 'Delete', value: 'delete', action: 'Delete a schedule' },
         ],
         default: 'list',
+        // A schedule created or edited with a key whose role cannot publish
+        // (contributor) is held for approval server-side: every occurrence it
+        // generates lands pending, whatever the request asked for.
       },
       {
         displayName: 'Schedule ID',

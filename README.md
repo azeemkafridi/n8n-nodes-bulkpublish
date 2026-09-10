@@ -30,6 +30,14 @@ npm install n8n-nodes-bulkpublish
 2. Go to **Settings > Developer** and create an API key
 3. In n8n, add a **BulkPublish API** credential with your key
 
+The key inherits the role of the member who created it, and the API enforces
+that role. A **viewer** key can read but cannot write, so every create, update
+and delete operation here answers 403 for one. A **contributor** key writes
+posts, media and labels but cannot connect or disconnect a channel, and any
+recurring schedule it creates or edits is held for team approval — every
+occurrence lands in the approval queue whatever the request asks for. Use an
+owner, admin or approver key for a workflow that must publish on its own.
+
 ## Operations
 
 ### Post

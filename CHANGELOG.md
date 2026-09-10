@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.2 (2026-09-10)
+
+### Changed
+
+- The API now enforces team roles on every write, so what a workflow can do
+  depends on the role behind its key. A viewer key gets 403 on every create,
+  update and delete. A contributor key can no longer connect or disconnect a
+  channel, and a recurring schedule it creates or updates is held for team
+  approval whatever the request asks for. Documented in the README and on the
+  Schedule resource.
+
 ## 1.10.1 (2026-09-09)
 
 ### Changed
