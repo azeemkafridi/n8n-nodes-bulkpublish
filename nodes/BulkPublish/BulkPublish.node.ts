@@ -301,6 +301,15 @@ export class BulkPublish implements INodeType {
         description: 'Filter by team-approval state. Approval is orthogonal to post status — the scheduler skips pending/rejected posts.',
       },
       {
+        displayName: 'Assigned To',
+        name: 'assignedToFilter',
+        type: 'string',
+        default: '',
+        displayOptions: { show: { resource: ['post'], operation: ['list'] } },
+        description:
+          'Filter by who the post is assigned to: a user ID, "me" for the owner of this API key, or "unassigned". Orthogonal to status \u2014 a post can be scheduled and assigned at the same time.',
+      },
+      {
         displayName: 'Limit',
         name: 'limit',
         type: 'number',
@@ -1078,6 +1087,8 @@ export class BulkPublish implements INodeType {
           if (status) qs.status = status;
           const approvalStatus = this.getNodeParameter('approvalStatusFilter', i, '') as string;
           if (approvalStatus) qs.approvalStatus = approvalStatus;
+          const assignedTo = this.getNodeParameter('assignedToFilter', i, '') as string;
+          if (assignedTo) qs.assignedTo = assignedTo;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'GET', url: `${BASE_URL}/api/posts`, qs, json: true,
           });

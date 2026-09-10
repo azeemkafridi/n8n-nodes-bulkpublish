@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.11.0 (2026-09-10)
+
+### Added
+
+- **Post: List** takes an **Assigned To** filter — a user ID, `me`, or
+  `unassigned`. Assignment is a separate axis from status, so a post can be
+  scheduled and assigned at the same time.
+- Posts returned by every operation now carry `author`, `approver` and
+  `assignee` (each `{ id, name, image }`), plus `assignedUserId`, `assignedAt`
+  and `rejectedBy`.
+
 ## 1.10.2 (2026-09-10)
 
 ### Changed
