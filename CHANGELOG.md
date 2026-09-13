@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.12.0 (2026-09-13)
+
+### Added
+
+- **`articleImage` on an RSS feed's `fieldMapping`** (`when_needed` default / `always` / `never`).
+  A feed item with no picture of its own can borrow one from the article it links to,
+  so a text-only news or blog feed finally works on Instagram, Pinterest and Snapchat
+  instead of skipping those channels on every item. `when_needed` only does this when a
+  channel on the feed is on a platform that cannot publish without an image, because the
+  picture attaches to the post and therefore reaches every channel of that feed.
+
 ## 1.11.0 (2026-09-10)
 
 ### Added
