@@ -57,8 +57,20 @@ export class BulkPublish implements INodeType {
           { name: 'Delete', value: 'delete', action: 'Delete a post' },
           { name: 'Publish', value: 'publish', action: 'Publish a draft immediately' },
           { name: 'Retry', value: 'retry', action: 'Retry failed platforms' },
-          { name: 'Approve', value: 'approve', action: 'Approve a pending post' },
-          { name: 'Reject', value: 'reject', action: 'Reject a pending post' },
+          {
+            name: 'Approve',
+            value: 'approve',
+            action: 'Approve a pending post',
+            description:
+              'Requires a role with post:approve (owner, admin, approver). The post publishes at its scheduled time, or right away if that time passed less than 15 minutes ago. Approved later than that, it is approved but NOT published: it comes back with status "draft" (approvalStatus "approved", scheduledAt unchanged) and the author is notified to choose a new time, so check the returned status. Fails with 409 if the post changed while you were reviewing it (someone else approved, rejected or withdrew it, or its scheduled time moved): get it again and review what is there now.',
+          },
+          {
+            name: 'Reject',
+            value: 'reject',
+            action: 'Reject a pending post',
+            description:
+              'Requires a role with post:approve. The post returns to draft with approvalStatus "rejected" and the optional reason, and the author is notified. Fails with 409 if someone else approved, rejected or withdrew it while you were reviewing it.',
+          },
           {
             name: 'Metrics',
             value: 'metrics',
@@ -186,7 +198,7 @@ export class BulkPublish implements INodeType {
         type: 'boolean',
         default: false,
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Hold the scheduled post as pending team approval — the scheduler skips it until someone with the post:approve permission (owner/admin/approver) approves it. Defaults to false. NOTE: for API keys of roles without post:publish (contributors) the server forces this to true regardless of what is sent.',
+        description: 'Hold the scheduled post as pending team approval — it does not publish until someone with the post:approve permission (owner/admin/approver) approves it. Applies only when Status is scheduled: a draft ignores it. Defaults to false. NOTE: for API keys of roles without post:publish (contributors) the server forces this to true on scheduled posts, regardless of what is sent.',
       },
       {
         displayName: 'Link Tracking',
@@ -298,7 +310,7 @@ export class BulkPublish implements INodeType {
         ],
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['list'] } },
-        description: 'Filter by team-approval state. Approval is orthogonal to post status — the scheduler skips pending/rejected posts.',
+        description: 'Filter by team-approval state. Approval is orthogonal to post status — pending and rejected posts do not publish.',
       },
       {
         displayName: 'Assigned To',

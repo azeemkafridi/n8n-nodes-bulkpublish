@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.13.1 (2026-09-24)
+
+### Changed
+
+- **Approve and Reject describe their outcomes.** Approve says that a post
+  approved more than 15 minutes after its scheduled time is approved but not
+  published: it comes back as a `draft` (approval `approved`, time unchanged)
+  and the author is asked to pick a new time, so check the returned status. Both
+  now say they fail with **409** when the post changed while you were reviewing
+  it (someone else approved, rejected or withdrew it, or, on approve, its
+  scheduled time moved).
+- **Request Approval says it applies only to scheduled posts.** A post created
+  as a draft ignores it. Held posts, and the approval filter on List, are
+  described as "do not publish" until approved.
+
 ## 1.13.0 (2026-09-24)
 
 ### Added
