@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.14.0 (2026-09-24)
+
+### Added
+- **Post → Approve** has an optional **If Late** option (`publish` / `hold`), sent as
+  `whenLate` only when chosen. It matters only when the scheduled time passed more than
+  15 minutes ago: `publish` publishes now, `hold` approves but returns the post to draft
+  so the author picks a new time. Unset, the post's own `publishWhenApproved` decides.
+- **Post → Create** has **Publish When Approved** (shown with Request Approval), and
+  **Post → Update** has a Leave Unchanged / Yes / No choice for it: a post approved
+  after its scheduled time publishes straight away instead of returning to draft.
+  Post responses now carry `publishWhenApproved`.
+
 ## 1.13.1 (2026-09-24)
 
 ### Changed

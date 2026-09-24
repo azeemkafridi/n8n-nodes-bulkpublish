@@ -62,7 +62,7 @@ export class BulkPublish implements INodeType {
             value: 'approve',
             action: 'Approve a pending post',
             description:
-              'Requires a role with post:approve (owner, admin, approver). The post publishes at its scheduled time, or right away if that time passed less than 15 minutes ago. Approved later than that, it is approved but NOT published: it comes back with status "draft" (approvalStatus "approved", scheduledAt unchanged) and the author is notified to choose a new time, so check the returned status. Fails with 409 if the post changed while you were reviewing it (someone else approved, rejected or withdrew it, or its scheduled time moved): get it again and review what is there now.',
+              'Requires a role with post:approve (owner, admin, approver). The post publishes at its scheduled time, or right away if that time passed less than 15 minutes ago. Approved later than that, If Late decides: publish now, or approve but return it to status "draft" (approvalStatus "approved", scheduledAt unchanged) with the author notified to choose a new time. Left unset, the post\'s own publishWhenApproved decides (publish if true, otherwise draft), so check the returned status. Fails with 409 if the post changed while you were reviewing it (someone else approved, rejected or withdrew it, or its scheduled time moved): get it again and review what is there now.',
           },
           {
             name: 'Reject',
@@ -201,6 +201,14 @@ export class BulkPublish implements INodeType {
         description: 'Hold the scheduled post as pending team approval — it does not publish until someone with the post:approve permission (owner/admin/approver) approves it. Applies only when Status is scheduled: a draft ignores it. Defaults to false. NOTE: for API keys of roles without post:publish (contributors) the server forces this to true on scheduled posts, regardless of what is sent.',
       },
       {
+        displayName: 'Publish When Approved',
+        name: 'publishWhenApproved',
+        type: 'boolean',
+        default: false,
+        displayOptions: { show: { resource: ['post'], operation: ['create'], requestApproval: [true] } },
+        description: 'Whether to publish the post straight away if it is approved after its scheduled time. Off (the default), a late approval returns the post to draft so the author picks a new time.',
+      },
+      {
         displayName: 'Link Tracking',
         name: 'linkTrackingOverride',
         type: 'options',
@@ -246,6 +254,20 @@ export class BulkPublish implements INodeType {
         description: 'Optional rejection reason (max 2000 chars), stored on the post and shown to the author. Rejecting returns the post to draft.',
       },
 
+      {
+        displayName: 'If Late',
+        name: 'whenLate',
+        type: 'options',
+        options: [
+          { name: "Follow the Post's Setting", value: '' },
+          { name: 'Publish Now', value: 'publish' },
+          { name: 'Return to Draft for a New Time', value: 'hold' },
+        ],
+        default: '',
+        displayOptions: { show: { resource: ['post'], operation: ['approve'] } },
+        description: "Only matters when the scheduled time passed more than 15 minutes ago. Publish Now publishes it immediately; Return to Draft approves it but sends it back to draft so the author picks a new time. Follow the Post's Setting publishes only if the post has Publish When Approved on.",
+      },
+
       // Post: Update fields
       {
         displayName: 'Content',
@@ -263,6 +285,19 @@ export class BulkPublish implements INodeType {
         default: false,
         displayOptions: { show: { resource: ['post'], operation: ['update'] } },
         description: 'Hold the scheduled post as pending team approval (see the Create option). Only sent when enabled.',
+      },
+      {
+        displayName: 'Publish When Approved',
+        name: 'updatePublishWhenApproved',
+        type: 'options',
+        options: [
+          { name: 'Leave Unchanged', value: 'unchanged' },
+          { name: 'Yes', value: 'yes' },
+          { name: 'No', value: 'no' },
+        ],
+        default: 'unchanged',
+        displayOptions: { show: { resource: ['post'], operation: ['update'] } },
+        description: 'For a post awaiting approval: whether to publish it straight away if it is approved after its scheduled time, instead of returning it to draft for a new time',
       },
       {
         displayName: 'Link Tracking',
@@ -1086,6 +1121,9 @@ export class BulkPublish implements INodeType {
 
           const requestApproval = this.getNodeParameter('requestApproval', i, false) as boolean;
           if (requestApproval) body.requestApproval = true;
+          if (requestApproval && (this.getNodeParameter('publishWhenApproved', i, false) as boolean)) {
+            body.publishWhenApproved = true;
+          }
 
           // 'inherit' is the server default (null), so it is sent as null rather
           // than omitted — either way the post follows the organization setting.
@@ -1119,6 +1157,9 @@ export class BulkPublish implements INodeType {
           if (content) body.content = content;
           const updateRequestApproval = this.getNodeParameter('updateRequestApproval', i, false) as boolean;
           if (updateRequestApproval) body.requestApproval = true;
+          const updatePwa = this.getNodeParameter('updatePublishWhenApproved', i, 'unchanged') as string;
+          if (updatePwa === 'yes') body.publishWhenApproved = true;
+          else if (updatePwa === 'no') body.publishWhenApproved = false;
 
           // Here 'inherit' must send an explicit null: omitting it would leave a
           // previously-set override in place instead of clearing it.
@@ -1148,8 +1189,10 @@ export class BulkPublish implements INodeType {
           });
         } else if (operation === 'approve') {
           const id = this.getNodeParameter('postId', i) as number;
+          const whenLate = this.getNodeParameter('whenLate', i, '') as string;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts/${id}/approve`, json: true,
+            ...(whenLate === 'publish' || whenLate === 'hold' ? { body: { whenLate } } : {}),
           });
         } else if (operation === 'reject') {
           const id = this.getNodeParameter('postId', i) as number;
