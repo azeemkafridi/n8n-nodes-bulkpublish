@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.14.1 (2026-09-24)
+
+### Added
+- **Post → Approve** and **Post → Reject** have an optional **If Unmodified Since**
+  field: pass the post's `updatedAt` from an earlier step. It is sent as
+  `ifUnmodifiedSince` only when set; if the post changed since then, nothing is
+  changed and the step fails with 409.
+
+### Changed
+- The 409 wording now reads: the post changed since you loaded it (checked when
+  If Unmodified Since is set) or is no longer awaiting approval. A moved
+  scheduled time is not a cause of 409. Approve and Reject both turn
+  Publish When Approved off.
+
 ## 1.14.0 (2026-09-24)
 
 ### Added

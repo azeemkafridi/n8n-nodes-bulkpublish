@@ -62,14 +62,14 @@ export class BulkPublish implements INodeType {
             value: 'approve',
             action: 'Approve a pending post',
             description:
-              'Requires a role with post:approve (owner, admin, approver). The post publishes at its scheduled time, or right away if that time passed less than 15 minutes ago. Approved later than that, If Late decides: publish now, or approve but return it to status "draft" (approvalStatus "approved", scheduledAt unchanged) with the author notified to choose a new time. Left unset, the post\'s own publishWhenApproved decides (publish if true, otherwise draft), so check the returned status. Fails with 409 if the post changed while you were reviewing it (someone else approved, rejected or withdrew it, or its scheduled time moved): get it again and review what is there now.',
+              'Requires a role with post:approve (owner, admin, approver). The post publishes at its scheduled time, or right away if that time passed less than 15 minutes ago. Approved later than that, If Late decides: publish now, or approve but return it to status "draft" (approvalStatus "approved", scheduledAt unchanged) with the author notified to choose a new time. Left unset, the post\'s own publishWhenApproved decides (publish if true, otherwise draft), so check the returned status. Approving turns Publish When Approved off. Fails with 409 if the post changed since you loaded it (checked when If Unmodified Since is set) or is no longer awaiting approval: get it again and review what is there now.',
           },
           {
             name: 'Reject',
             value: 'reject',
             action: 'Reject a pending post',
             description:
-              'Requires a role with post:approve. The post returns to draft with approvalStatus "rejected" and the optional reason, and the author is notified. Fails with 409 if someone else approved, rejected or withdrew it while you were reviewing it.',
+              'Requires a role with post:approve. The post returns to draft with approvalStatus "rejected" and the optional reason, and the author is notified. Rejecting turns Publish When Approved off. Fails with 409 if the post changed since you loaded it (checked when If Unmodified Since is set) or is no longer awaiting approval.',
           },
           {
             name: 'Metrics',
@@ -266,6 +266,16 @@ export class BulkPublish implements INodeType {
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['approve'] } },
         description: "Only matters when the scheduled time passed more than 15 minutes ago. Publish Now publishes it immediately; Return to Draft approves it but sends it back to draft so the author picks a new time. Follow the Post's Setting publishes only if the post has Publish When Approved on.",
+      },
+
+      {
+        displayName: 'If Unmodified Since',
+        name: 'ifUnmodifiedSince',
+        type: 'string',
+        default: '',
+        placeholder: '={{ $json.updatedAt }}',
+        displayOptions: { show: { resource: ['post'], operation: ['approve', 'reject'] } },
+        description: "Optional. The post's updatedAt from an earlier step (ISO timestamp). If the post changed since then, nothing is changed and the step fails with 409 so you can review the current version. Leave empty to skip the check.",
       },
 
       // Post: Update fields
@@ -1190,16 +1200,24 @@ export class BulkPublish implements INodeType {
         } else if (operation === 'approve') {
           const id = this.getNodeParameter('postId', i) as number;
           const whenLate = this.getNodeParameter('whenLate', i, '') as string;
+          const ifUnmodifiedSince = (this.getNodeParameter('ifUnmodifiedSince', i, '') as string).trim();
+          const body: Record<string, unknown> = {};
+          if (whenLate === 'publish' || whenLate === 'hold') body.whenLate = whenLate;
+          if (ifUnmodifiedSince) body.ifUnmodifiedSince = ifUnmodifiedSince;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts/${id}/approve`, json: true,
-            ...(whenLate === 'publish' || whenLate === 'hold' ? { body: { whenLate } } : {}),
+            ...(Object.keys(body).length ? { body } : {}),
           });
         } else if (operation === 'reject') {
           const id = this.getNodeParameter('postId', i) as number;
           const reason = this.getNodeParameter('rejectionReason', i, '') as string;
+          const ifUnmodifiedSince = (this.getNodeParameter('ifUnmodifiedSince', i, '') as string).trim();
+          const body: Record<string, unknown> = {};
+          if (reason) body.reason = reason;
+          if (ifUnmodifiedSince) body.ifUnmodifiedSince = ifUnmodifiedSince;
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST', url: `${BASE_URL}/api/posts/${id}/reject`, json: true,
-            body: reason ? { reason } : {},
+            body,
           });
         } else if (operation === 'metrics') {
           const id = this.getNodeParameter('postId', i) as number;
