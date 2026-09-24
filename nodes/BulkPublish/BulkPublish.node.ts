@@ -765,6 +765,14 @@ export class BulkPublish implements INodeType {
             description: 'Comma-separated channel IDs, e.g. 12,15. Only rows on these channels count.',
           },
           {
+            displayName: 'Timezone',
+            name: 'tz',
+            type: 'string',
+            default: '',
+            placeholder: 'Asia/Karachi',
+            description: 'IANA timezone that sets where each day of the range starts and ends. Empty means UTC. Use the same zone for Summary and Engagement so their days agree.',
+          },
+          {
             displayName: 'Platforms',
             name: 'platforms',
             type: 'string',
@@ -1421,7 +1429,7 @@ export class BulkPublish implements INodeType {
         }
         // Shared filters — accepted by both endpoints (same parameter names).
         const filters = this.getNodeParameter('analyticsFilters', i, {}) as Record<string, any>;
-        for (const key of ['channelIds', 'platforms', 'labelIds', 'postFormat', 'mediaType']) {
+        for (const key of ['channelIds', 'platforms', 'labelIds', 'postFormat', 'mediaType', 'tz']) {
           if (filters[key]) qs[key] = filters[key];
         }
         if (filters.compare) qs.compare = '1';

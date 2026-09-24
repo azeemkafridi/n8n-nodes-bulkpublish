@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.13.0 (2026-09-24)
+
+### Added
+
+- **Timezone filter on Analytics** (Summary and Engagement). An IANA zone such as
+  `Asia/Karachi` sets where each day of the range starts and ends; empty keeps UTC,
+  so existing workflows return what they did. Use the same zone on both operations:
+  Engagement used to count UTC days while Summary could count local ones, so an
+  early-morning post on the first day appeared in one and not the other.
+
 ## 1.12.0 (2026-09-13)
 
 ### Added
