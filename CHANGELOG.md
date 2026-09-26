@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.14.2 (2026-09-26)
+
+### Fixed
+- **Media → Upload** now sends the file as a form upload in a `file` field, which is
+  the only format the upload endpoint accepts. Earlier versions sent the raw bytes
+  and every upload failed with 400 "Expected multipart/form-data". Upload Large File
+  was not affected.
+
 ## 1.14.1 (2026-09-24)
 
 ### Added

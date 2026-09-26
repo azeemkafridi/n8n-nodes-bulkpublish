@@ -1289,15 +1289,20 @@ export class BulkPublish implements INodeType {
           const binaryProperty = this.getNodeParameter('binaryProperty', i) as string;
           const binaryData = this.helpers.assertBinaryData(i, binaryProperty);
           const buffer = await this.helpers.getBinaryDataBuffer(i, binaryProperty);
-          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
+          // The endpoint accepts multipart/form-data with the file in a "file" field only.
+          responseData = await this.helpers.requestWithAuthentication.call(this, credName, {
             method: 'POST',
-            url: `${BASE_URL}/api/media`,
-            body: buffer,
-            headers: {
-              'Content-Type': binaryData.mimeType,
-              'Content-Disposition': `attachment; filename="${binaryData.fileName || 'upload'}"`,
+            uri: `${BASE_URL}/api/media`,
+            formData: {
+              file: {
+                value: buffer,
+                options: {
+                  filename: binaryData.fileName || 'upload',
+                  contentType: binaryData.mimeType,
+                },
+              },
             },
-            json: false,
+            json: true,
           });
           if (typeof responseData === 'string') responseData = JSON.parse(responseData);
         } else if (operation === 'uploadLarge') {
