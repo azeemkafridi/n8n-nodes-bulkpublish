@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.14.3 (2026-10-03)
+
+### Changed
+- Published from GitHub Actions with an npm provenance attestation, so the package on
+  npm can be traced to the exact commit and workflow run that built it. Same node
+  code as 1.14.2, which never reached npm.
+
 ## 1.14.2 (2026-09-26)
 
 ### Fixed

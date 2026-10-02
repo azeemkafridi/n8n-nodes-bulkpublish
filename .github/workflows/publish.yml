@@ -4,24 +4,55 @@ on:
   push:
     tags:
       - 'v*'
+  # Re-publish a tag by hand, e.g. after rotating the npm credential.
+  workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # required for npm provenance
+      id-token: write  # npm provenance, and trusted publishing (OIDC)
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      - run: npm ci
+      # Trusted publishing needs npm 11.5.1 or later; Node 22 ships npm 10.
+      - run: npm install -g npm@latest
 
-      - run: npm publish --provenance --access public
+      # The tag names the version being released. A tag that disagrees with
+      # package.json would publish something other than what it says.
+      - name: Check the tag matches package.json
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json version ${version}" >&2
+            exit 1
+          fi
+          echo "VERSION=${version}" >> "$GITHUB_ENV"
+
+      # A tag added after the fact for an already-published version (so the
+      # registry can be matched to a commit) must not fail the workflow.
+      - name: Skip a version that is already on npm
+        id: published
+        run: |
+          if npm view "n8n-nodes-bulkpublish@${VERSION}" version >/dev/null 2>&1; then
+            echo "n8n-nodes-bulkpublish@${VERSION} is already published; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.published.outputs.skip != 'true'
+        run: npm ci
+
+      # With a trusted publisher configured on npmjs.com this authenticates by
+      # OIDC and NPM_TOKEN is unused; without one, NPM_TOKEN must be a valid
+      # automation token. A 404 on the PUT means the credential was refused.
+      - if: steps.published.outputs.skip != 'true'
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
