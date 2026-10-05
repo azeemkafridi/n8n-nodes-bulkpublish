@@ -2,12 +2,14 @@ import {
   IAuthenticateGeneric,
   ICredentialTestRequest,
   ICredentialType,
+  Icon,
   INodeProperties,
 } from 'n8n-workflow';
 
 export class BulkPublishApi implements ICredentialType {
   name = 'bulkPublishApi';
   displayName = 'BulkPublish API';
+  icon: Icon = 'file:../nodes/BulkPublish/icon.svg';
   documentationUrl = 'https://github.com/azeemkafridi/bulkpublish-api';
 
   properties: INodeProperties[] = [

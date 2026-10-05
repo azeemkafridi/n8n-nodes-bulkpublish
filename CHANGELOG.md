@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.15.0 (2026-10-07)
+
+Passes n8n's community-node verification scan, which 1.14.3 failed.
+
+### Added
+- The node can be used as a tool by n8n AI agents.
+- Each output item is linked to the input item that produced it, so expressions
+  that reach back to earlier nodes resolve correctly.
+- The credential shows the BulkPublish icon.
+
+### Changed
+- **Post → List**: Limit defaults to 50 (was 20) and must be at least 1.
+- Label colors use a color picker.
+- Dropdown options are listed alphabetically.
+- **Media → Upload** builds its form upload without the deprecated request helper.
+  Same request on the wire: the file in a `file` field.
+- Failed large-file uploads report a standard n8n error.
+
 ## 1.14.3 (2026-10-03)
 
 ### Changed

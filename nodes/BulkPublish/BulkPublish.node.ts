@@ -3,6 +3,9 @@ import {
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
+  JsonObject,
+  NodeApiError,
+  NodeConnectionTypes,
   NodeOperationError,
 } from 'n8n-workflow';
 
@@ -18,8 +21,9 @@ export class BulkPublish implements INodeType {
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
     description: 'Publish to 16 social media platforms — Facebook, Instagram, X, TikTok, YouTube, Threads, Bluesky, Pinterest, LinkedIn, Mastodon, Google Business Profile, Reddit, Discord, Telegram, Tumblr, Snapchat',
     defaults: { name: 'BulkPublish' },
-    inputs: ['main'],
-    outputs: ['main'],
+    inputs: [NodeConnectionTypes.Main],
+    outputs: [NodeConnectionTypes.Main],
+    usableAsTool: true,
     credentials: [{ name: 'bulkPublishApi', required: true }],
     properties: [
       // ── Resource ─────────────────────────────────────────────
@@ -29,15 +33,15 @@ export class BulkPublish implements INodeType {
         type: 'options',
         noDataExpression: true,
         options: [
-          { name: 'Post', value: 'post' },
+          { name: 'Analytics', value: 'analytics' },
           { name: 'Channel', value: 'channel' },
           { name: 'Channel Set', value: 'channelSet' },
-          { name: 'Media', value: 'media' },
           { name: 'Label', value: 'label' },
-          { name: 'RSS Feed', value: 'rssFeed' },
-          { name: 'Analytics', value: 'analytics' },
-          { name: 'Schedule', value: 'schedule' },
+          { name: 'Media', value: 'media' },
+          { name: 'Post', value: 'post' },
           { name: 'Quota', value: 'quota' },
+          { name: 'RSS Feed', value: 'rssFeed' },
+          { name: 'Schedule', value: 'schedule' },
         ],
         default: 'post',
       },
@@ -50,13 +54,6 @@ export class BulkPublish implements INodeType {
         noDataExpression: true,
         displayOptions: { show: { resource: ['post'] } },
         options: [
-          { name: 'Create', value: 'create', action: 'Create a post' },
-          { name: 'Get', value: 'get', action: 'Get a post' },
-          { name: 'List', value: 'list', action: 'List posts' },
-          { name: 'Update', value: 'update', action: 'Update a post' },
-          { name: 'Delete', value: 'delete', action: 'Delete a post' },
-          { name: 'Publish', value: 'publish', action: 'Publish a draft immediately' },
-          { name: 'Retry', value: 'retry', action: 'Retry failed platforms' },
           {
             name: 'Approve',
             value: 'approve',
@@ -64,13 +61,11 @@ export class BulkPublish implements INodeType {
             description:
               'Requires a role with post:approve (owner, admin, approver). The post publishes at its scheduled time, or right away if that time passed less than 15 minutes ago. Approved later than that, If Late decides: publish now, or approve but return it to status "draft" (approvalStatus "approved", scheduledAt unchanged) with the author notified to choose a new time. Left unset, the post\'s own publishWhenApproved decides (publish if true, otherwise draft), so check the returned status. Approving turns Publish When Approved off. Fails with 409 if the post changed since you loaded it (checked when If Unmodified Since is set) or is no longer awaiting approval: get it again and review what is there now.',
           },
-          {
-            name: 'Reject',
-            value: 'reject',
-            action: 'Reject a pending post',
-            description:
-              'Requires a role with post:approve. The post returns to draft with approvalStatus "rejected" and the optional reason, and the author is notified. Rejecting turns Publish When Approved off. Fails with 409 if the post changed since you loaded it (checked when If Unmodified Since is set) or is no longer awaiting approval.',
-          },
+          { name: 'Bulk Operations', value: 'bulk', action: 'Bulk delete or retry posts' },
+          { name: 'Create', value: 'create', action: 'Create a post' },
+          { name: 'Delete', value: 'delete', action: 'Delete a post' },
+          { name: 'Get', value: 'get', action: 'Get a post' },
+          { name: 'List', value: 'list', action: 'List posts' },
           {
             name: 'Metrics',
             value: 'metrics',
@@ -78,9 +73,18 @@ export class BulkPublish implements INodeType {
             description:
               'Engagement metrics per platform. Each platform entry carries supportedMetrics — any metric key not in that list is stored as 0 because the platform has no such field, so do not treat it as a measurement. X reports no reach/saves/clicks/video views, Bluesky and Mastodon no impressions, Pinterest no reach, YouTube no shares or reach.',
           },
-          { name: 'Story Publish', value: 'storyPublish', action: 'Publish a story' },
-          { name: 'Bulk Operations', value: 'bulk', action: 'Bulk delete or retry posts' },
+          { name: 'Publish', value: 'publish', action: 'Publish a draft immediately' },
           { name: 'Queue Slot', value: 'queueSlot', action: 'Get the next queue slot' },
+          {
+            name: 'Reject',
+            value: 'reject',
+            action: 'Reject a pending post',
+            description:
+              'Requires a role with post:approve. The post returns to draft with approvalStatus "rejected" and the optional reason, and the author is notified. Rejecting turns Publish When Approved off. Fails with 409 if the post changed since you loaded it (checked when If Unmodified Since is set) or is no longer awaiting approval.',
+          },
+          { name: 'Retry', value: 'retry', action: 'Retry failed platforms' },
+          { name: 'Story Publish', value: 'storyPublish', action: 'Publish a story' },
+          { name: 'Update', value: 'update', action: 'Update a post' },
         ],
         default: 'create',
       },
@@ -182,7 +186,8 @@ export class BulkPublish implements INodeType {
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars), reddit.subreddit, discord.channelId. Optional: youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, pinterest.coverImageUrl (video pins — omitted: falls back to the video\'s auto-extracted poster frame), tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, linkedin.url (for article), gmb.ctaType, mastodon.visibility, reddit.title/type/url/flairId/thumbnailUrl, tumblr.blogName/title/tags/link/sourceUrl, snapchat.title (saved-story title, 45 chars)/locale (spotlight, default en_US)/saveToProfile (spotlight, default true). Note reddit.thumbnailUrl is REQUIRED on video posts — unlike pinterest.coverImageUrl there is no poster-frame fallback. Telegram takes no options. reddit, discord and tumblr nest their options under the BulkPublish channel ID, e.g. {"reddit":{"12":{"subreddit":"webdev"}}}; a flat object applies to every channel of that platform; snapchat accepts either form.',
+        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars), reddit.subreddit, discord.channelId. Optional: youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, pinterest.coverImageUrl (video pins — omitted: falls back to the video\'s auto-extracted poster frame), tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, the LinkedIn article link, gmb.ctaType, mastodon.visibility, reddit.title/type/flairId/thumbnailUrl and the Reddit link, tumblr.blogName/title/tags/link/sourceUrl, snapchat.title (saved-story title, 45 chars)/locale (spotlight, default en_US)/saveToProfile (spotlight, default true). Note reddit.thumbnailUrl is REQUIRED on video posts — unlike pinterest.coverImageUrl there is no poster-frame fallback. Telegram takes no options. reddit, discord and tumblr nest their options under the BulkPublish channel ID, e.g. {"reddit":{"12":{"subreddit":"webdev"}}}; a flat object applies to every channel of that platform; snapchat accepts either form.',
+        hint: 'The LinkedIn article link goes in linkedin.url, the Reddit link in reddit.url',
       },
       {
         displayName: 'Thread Parts (JSON)',
@@ -198,7 +203,7 @@ export class BulkPublish implements INodeType {
         type: 'boolean',
         default: false,
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Hold the scheduled post as pending team approval — it does not publish until someone with the post:approve permission (owner/admin/approver) approves it. Applies only when Status is scheduled: a draft ignores it. Defaults to false. NOTE: for API keys of roles without post:publish (contributors) the server forces this to true on scheduled posts, regardless of what is sent.',
+        description: 'Whether to hold the scheduled post as pending team approval — it does not publish until someone with the post:approve permission (owner/admin/approver) approves it. Applies only when Status is scheduled: a draft ignores it. Defaults to false. NOTE: for API keys of roles without post:publish (contributors) the server forces this to true on scheduled posts, regardless of what is sent.',
       },
       {
         displayName: 'Publish When Approved',
@@ -294,7 +299,7 @@ export class BulkPublish implements INodeType {
         type: 'boolean',
         default: false,
         displayOptions: { show: { resource: ['post'], operation: ['update'] } },
-        description: 'Hold the scheduled post as pending team approval (see the Create option). Only sent when enabled.',
+        description: 'Whether to hold the scheduled post as pending team approval (see the Create option). Only sent when enabled.',
       },
       {
         displayName: 'Publish When Approved',
@@ -332,12 +337,12 @@ export class BulkPublish implements INodeType {
         options: [
           { name: 'All', value: '' },
           { name: 'Draft', value: 'draft' },
-          { name: 'Scheduled', value: 'scheduled' },
-          { name: 'Publishing', value: 'publishing' },
-          { name: 'Published', value: 'published' },
-          { name: 'Processing', value: 'processing' },
-          { name: 'Partial', value: 'partial' },
           { name: 'Failed', value: 'failed' },
+          { name: 'Partial', value: 'partial' },
+          { name: 'Processing', value: 'processing' },
+          { name: 'Published', value: 'published' },
+          { name: 'Publishing', value: 'publishing' },
+          { name: 'Scheduled', value: 'scheduled' },
         ],
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['list'] } },
@@ -348,9 +353,9 @@ export class BulkPublish implements INodeType {
         type: 'options',
         options: [
           { name: 'All', value: '' },
+          { name: 'Approved', value: 'approved' },
           { name: 'None', value: 'none' },
           { name: 'Pending', value: 'pending' },
-          { name: 'Approved', value: 'approved' },
           { name: 'Rejected', value: 'rejected' },
         ],
         default: '',
@@ -370,7 +375,9 @@ export class BulkPublish implements INodeType {
         displayName: 'Limit',
         name: 'limit',
         type: 'number',
-        default: 20,
+        typeOptions: { minValue: 1 },
+        default: 50,
+        description: 'Max number of results to return',
         displayOptions: { show: { resource: ['post'], operation: ['list'] } },
       },
 
@@ -402,7 +409,6 @@ export class BulkPublish implements INodeType {
         default: 'delete',
         required: true,
         displayOptions: { show: { resource: ['post'], operation: ['bulk'] } },
-        description: 'Action to perform on selected posts',
       },
       {
         displayName: 'Post IDs',
@@ -441,10 +447,10 @@ export class BulkPublish implements INodeType {
         noDataExpression: true,
         displayOptions: { show: { resource: ['channel'] } },
         options: [
-          { name: 'List', value: 'list', action: 'List channels' },
           { name: 'Get', value: 'get', action: 'Get a channel' },
+          { name: 'Get Options', value: 'options', action: 'Get platform options such as boards and playlists' },
           { name: 'Health Check', value: 'health', action: 'Check channel health' },
-          { name: 'Get Options', value: 'options', action: 'Get platform options (boards, playlists)' },
+          { name: 'List', value: 'list', action: 'List channels' },
           { name: 'Mentions Search', value: 'mentions', action: 'Search mentions for a channel' },
         ],
         default: 'list',
@@ -657,11 +663,11 @@ export class BulkPublish implements INodeType {
         noDataExpression: true,
         displayOptions: { show: { resource: ['media'] } },
         options: [
+          { name: 'Delete', value: 'delete', action: 'Delete a media file' },
+          { name: 'Get', value: 'get', action: 'Get a media file' },
+          { name: 'List', value: 'list', action: 'List media files' },
           { name: 'Upload', value: 'upload', action: 'Upload a media file' },
           { name: 'Upload Large File', value: 'uploadLarge', action: 'Upload a large file via chunked multipart upload' },
-          { name: 'List', value: 'list', action: 'List media files' },
-          { name: 'Get', value: 'get', action: 'Get a media file' },
-          { name: 'Delete', value: 'delete', action: 'Delete a media file' },
         ],
         default: 'upload',
       },
@@ -718,7 +724,7 @@ export class BulkPublish implements INodeType {
       {
         displayName: 'Label Color',
         name: 'labelColor',
-        type: 'string',
+        type: 'color',
         default: '#6366f1',
         displayOptions: { show: { resource: ['label'], operation: ['create'] } },
         description: 'Hex color code',
@@ -742,7 +748,7 @@ export class BulkPublish implements INodeType {
       {
         displayName: 'Label Color',
         name: 'updateLabelColor',
-        type: 'string',
+        type: 'color',
         default: '',
         displayOptions: { show: { resource: ['label'], operation: ['update'] } },
         description: 'New hex color code (leave empty to keep current)',
@@ -788,18 +794,18 @@ export class BulkPublish implements INodeType {
         name: 'analyticsSort',
         type: 'options',
         options: [
-          { name: 'Date', value: 'date' },
-          { name: 'Impressions', value: 'impressions' },
-          { name: 'Reach', value: 'reach' },
-          { name: 'Engagements', value: 'engagements' },
-          { name: 'Engagement Rate', value: 'engagementRate' },
-          { name: 'Likes', value: 'likes' },
-          { name: 'Comments', value: 'comments' },
-          { name: 'Shares', value: 'shares' },
-          { name: 'Saves', value: 'saves' },
           { name: 'Clicks', value: 'clicks' },
-          { name: 'Video Views', value: 'videoViews' },
+          { name: 'Comments', value: 'comments' },
+          { name: 'Date', value: 'date' },
+          { name: 'Engagement Rate', value: 'engagementRate' },
+          { name: 'Engagements', value: 'engagements' },
+          { name: 'Impressions', value: 'impressions' },
+          { name: 'Likes', value: 'likes' },
           { name: 'Link Clicks', value: 'linkClicks' },
+          { name: 'Reach', value: 'reach' },
+          { name: 'Saves', value: 'saves' },
+          { name: 'Shares', value: 'shares' },
+          { name: 'Video Views', value: 'videoViews' },
         ],
         default: 'date',
         displayOptions: { show: { resource: ['analytics'], operation: ['engagement'] } },
@@ -822,19 +828,11 @@ export class BulkPublish implements INodeType {
             description: 'Comma-separated channel IDs, e.g. 12,15. Only rows on these channels count.',
           },
           {
-            displayName: 'Timezone',
-            name: 'tz',
-            type: 'string',
-            default: '',
-            placeholder: 'Asia/Karachi',
-            description: 'IANA timezone that sets where each day of the range starts and ends. Empty means UTC. Use the same zone for Summary and Engagement so their days agree.',
-          },
-          {
-            displayName: 'Platforms',
-            name: 'platforms',
-            type: 'string',
-            default: '',
-            description: 'Comma-separated platform keys, e.g. x,linkedin',
+            displayName: 'Compare to Previous Period',
+            name: 'compare',
+            type: 'boolean',
+            default: false,
+            description: 'Whether to also return the equal-length window before From as "previous" / "previousWindow". Available for windows of 15 days or fewer (30-day statistics-retention cap).',
           },
           {
             displayName: 'Label IDs',
@@ -842,6 +840,26 @@ export class BulkPublish implements INodeType {
             type: 'string',
             default: '',
             description: 'Comma-separated label IDs. A post matches when it carries ANY of them.',
+          },
+          {
+            displayName: 'Media Type',
+            name: 'mediaType',
+            type: 'options',
+            options: [
+              { name: 'Any', value: '' },
+              { name: 'Image', value: 'image' },
+              { name: 'Text Only', value: 'text' },
+              { name: 'Video', value: 'video' },
+            ],
+            default: '',
+            description: 'Decided by the post\'s first media file',
+          },
+          {
+            displayName: 'Platforms',
+            name: 'platforms',
+            type: 'string',
+            default: '',
+            description: 'Comma-separated platform keys, e.g. x,linkedin',
           },
           {
             displayName: 'Post Format',
@@ -855,24 +873,12 @@ export class BulkPublish implements INodeType {
             default: '',
           },
           {
-            displayName: 'Media Type',
-            name: 'mediaType',
-            type: 'options',
-            options: [
-              { name: 'Any', value: '' },
-              { name: 'Text Only', value: 'text' },
-              { name: 'Image', value: 'image' },
-              { name: 'Video', value: 'video' },
-            ],
+            displayName: 'Timezone',
+            name: 'tz',
+            type: 'string',
             default: '',
-            description: 'Decided by the post\'s first media file',
-          },
-          {
-            displayName: 'Compare to Previous Period',
-            name: 'compare',
-            type: 'boolean',
-            default: false,
-            description: 'Whether to also return the equal-length window before From as "previous" / "previousWindow". Available for windows of 15 days or fewer (30-day statistics-retention cap).',
+            placeholder: 'Asia/Karachi',
+            description: 'IANA timezone that sets where each day of the range starts and ends. Empty means UTC. Use the same zone for Summary and Engagement so their days agree.',
           },
         ],
       },
@@ -1013,11 +1019,11 @@ export class BulkPublish implements INodeType {
         name: 'updateScheduleFrequency',
         type: 'options',
         options: [
-          { name: 'Keep Current', value: '' },
-          { name: 'Daily', value: 'daily' },
-          { name: 'Weekly', value: 'weekly' },
           { name: 'Biweekly', value: 'biweekly' },
+          { name: 'Daily', value: 'daily' },
+          { name: 'Keep Current', value: '' },
           { name: 'Monthly', value: 'monthly' },
+          { name: 'Weekly', value: 'weekly' },
         ],
         default: '',
         displayOptions: { show: { resource: ['schedule'], operation: ['update'] } },
@@ -1290,19 +1296,23 @@ export class BulkPublish implements INodeType {
           const binaryData = this.helpers.assertBinaryData(i, binaryProperty);
           const buffer = await this.helpers.getBinaryDataBuffer(i, binaryProperty);
           // The endpoint accepts multipart/form-data with the file in a "file" field only.
-          responseData = await this.helpers.requestWithAuthentication.call(this, credName, {
+          // Built by hand so the request does not depend on how the host serializes form objects.
+          const boundary = `----BulkPublish${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+          const fileName = (binaryData.fileName || 'upload').replace(/["\r\n]/g, '_');
+          const body = Buffer.concat([
+            Buffer.from(
+              `--${boundary}\r\n` +
+              `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n` +
+              `Content-Type: ${binaryData.mimeType || 'application/octet-stream'}\r\n\r\n`,
+            ),
+            buffer,
+            Buffer.from(`\r\n--${boundary}--\r\n`),
+          ]);
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
             method: 'POST',
-            uri: `${BASE_URL}/api/media`,
-            formData: {
-              file: {
-                value: buffer,
-                options: {
-                  filename: binaryData.fileName || 'upload',
-                  contentType: binaryData.mimeType,
-                },
-              },
-            },
-            json: true,
+            url: `${BASE_URL}/api/media`,
+            body,
+            headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
           });
           if (typeof responseData === 'string') responseData = JSON.parse(responseData);
         } else if (operation === 'uploadLarge') {
@@ -1353,7 +1363,10 @@ export class BulkPublish implements INodeType {
                 body: { r2Key, uploadId },
               });
             } catch { /* ignore abort failures */ }
-            throw error;
+            if (error instanceof NodeOperationError) {
+              throw new NodeOperationError(this.getNode(), error.message, { itemIndex: i });
+            }
+            throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
           }
         } else if (operation === 'list') {
           responseData = await this.helpers.httpRequestWithAuthentication.call(this, credName, {
@@ -1588,7 +1601,7 @@ export class BulkPublish implements INodeType {
 
       const items = Array.isArray(responseData) ? responseData : [responseData];
       for (const item of items) {
-        returnData.push({ json: item });
+        returnData.push({ json: item, pairedItem: { item: i } });
       }
     }
 
