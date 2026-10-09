@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.16.0 (2026-10-09)
+
+### Removed
+- Reddit platform support. **Breaking:** `reddit` is no longer a valid platform
+  value, and the Reddit options are gone from the Platform Specific field.
+
 ## 1.15.0 (2026-10-07)
 
 Passes n8n's community-node verification scan, which 1.14.3 failed.

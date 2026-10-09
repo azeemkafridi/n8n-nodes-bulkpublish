@@ -6,10 +6,6 @@ n8n community node for [BulkPublish](https://bulkpublish.com) — publish to 15 
 
 Facebook, Instagram, X (Twitter), TikTok, YouTube, Threads, Bluesky, Pinterest, Google Business Profile, LinkedIn, Mastodon, Discord, Telegram, Tumblr, Snapchat
 
-The node also accepts `reddit`, and channels already connected to it keep
-publishing — but new Reddit connections are paused pending Reddit API approval,
-so it is not counted above.
-
 ## Installation
 
 In your n8n instance:
@@ -124,7 +120,6 @@ at all. Branch on the support fields, not on the number.
 | Pinterest | impressions, clicks, saves, likes, comments, video views | reach |
 | Bluesky | likes, comments, shares, saves (bookmarks) | impressions, reach, clicks, video views |
 | Mastodon | likes, comments, shares | everything else |
-| Reddit | likes (score), comments, shares (crossposts) | impressions, reach, saves, clicks, video views |
 | Discord | likes (reaction counts), comments (thread replies) | everything else |
 | Snapchat | impressions, reach, likes, comments, shares, clicks, video views | saves |
 | Google Business, Telegram, Tumblr | *nothing* | — |
