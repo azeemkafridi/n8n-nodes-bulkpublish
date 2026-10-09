@@ -178,7 +178,7 @@ export class BulkPublish implements INodeType {
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Per-platform post type. Instagram: feed_photo, feed_video, reel, story, carousel. Facebook: post, reel, story. TikTok: video, photo_slideshow. YouTube: video, short. LinkedIn: post, multi_image, pdf_carousel, article. Pinterest: pin, video_pin, carousel. Threads: text, image, video, carousel. GMB: standard, event, offer. Snapchat: story (default), saved_story, spotlight — every Snapchat post needs exactly ONE media file (jpg/png image or mp4 video; spotlight is video-only, 6-60s) and plain stories carry no text. IMPORTANT: YouTube/TikTok require video files. Instagram defaults to feed_photo — set reel or feed_video for video.',
+        description: 'Per-platform post type. Instagram: feed_photo, feed_video, reel, story, carousel. Facebook: post, reel, story. TikTok: video, photo_slideshow. YouTube: video, short. LinkedIn: post, multi_image, pdf_carousel, article, document (one PDF, Word or PowerPoint file; title from linkedin.documentTitle), poll (linkedin.poll; needs text, no media), reshare (linkedin.reshareId; text optional, no media). Pinterest: pin, video_pin, carousel. Threads: text, image, video, carousel. GMB: standard, event, offer. Snapchat: story (default), saved_story, spotlight — every Snapchat post needs exactly ONE media file (jpg/png image or mp4 video; spotlight is video-only, 6-60s) and plain stories carry no text. IMPORTANT: YouTube/TikTok require video files. Instagram defaults to feed_photo — set reel or feed_video for video.',
       },
       {
         displayName: 'Platform Specific (JSON)',
@@ -186,7 +186,7 @@ export class BulkPublish implements INodeType {
         type: 'string',
         default: '',
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
-        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars), discord.channelId. Optional: youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, pinterest.coverImageUrl (video pins — omitted: falls back to the video\'s auto-extracted poster frame), tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, the LinkedIn article link, gmb.ctaType, mastodon.visibility, tumblr.blogName/title/tags/link/sourceUrl, snapchat.title (saved-story title, 45 chars)/locale (spotlight, default en_US)/saveToProfile (spotlight, default true). Telegram takes no options. discord and tumblr nest their options under the BulkPublish channel ID, e.g. {"discord":{"12":{"channelId":"123456789"}}}; a flat object applies to every channel of that platform; snapchat accepts either form.',
+        description: 'Platform-specific options. Required: youtube.title (1-100 chars), pinterest.title (1-100 chars), discord.channelId. Optional: x.poll/quoteId/communityId/shareWithFollowers, bluesky.replyAllow/allowQuotes/quoteId/langs/contentLabel, mastodon.poll/sensitive/quoteId, threads.replyControl/pollOptions/linkAttachment, instagram.userTags/shareToFeed/locationId, facebook.textFormatPresetId, tiktok.sendToDrafts/photoCoverIndex/autoAddMusic, youtube.containsSyntheticMedia/notifySubscribers/license/embeddable/publicStatsViewable/defaultLanguage/defaultAudioLanguage/recordingDate, pinterest.boardSectionId/coverKeyFrameTime, linkedin.documentTitle/poll/reshareId/thumbnailUrl/visibility/disableReshare, tumblr.state/slug/reblogInteraction/reblogUrl, discord.silent/buttons/startThread/threadName/embed/poll/pin/tags, youtube.privacyStatus, youtube.categoryId, youtube.tags, pinterest.boardId, pinterest.link, pinterest.coverImageUrl (video pins — omitted: falls back to the video\'s auto-extracted poster frame), tiktok.privacyLevel (SELF_ONLY/PUBLIC/FRIENDS), instagram.collaborators, the LinkedIn article link, gmb.ctaType, mastodon.visibility, tumblr.blogName/title/tags/link/sourceUrl, snapchat.title (saved-story title, 45 chars)/locale (spotlight, default en_US)/saveToProfile (spotlight, default true). Telegram accepts silent, protectContent, pin, threadId, buttons, spoiler, disablePreview and poll. telegram, discord and tumblr nest their options under the BulkPublish channel ID, e.g. {"discord":{"12":{"channelId":"123456789"}}}; a flat object applies to every channel of that platform; snapchat accepts either form.',
         hint: 'The LinkedIn article link goes in linkedin.url',
       },
       {
@@ -678,7 +678,7 @@ export class BulkPublish implements INodeType {
         default: 'data',
         required: true,
         displayOptions: { show: { resource: ['media'], operation: ['upload'] } },
-        description: 'Name of the binary property containing the file to upload',
+        description: 'Name of the binary property containing the file to upload. Images, videos, and PDF, Word and PowerPoint documents (up to 100MB) are accepted; a document can only be published to LinkedIn, as a document post.',
       },
       {
         displayName: 'Binary Property',

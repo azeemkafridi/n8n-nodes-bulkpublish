@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.17.0 (2026-10-09)
+
+### Added
+- Platform Specific (JSON) now documents the new post options: X polls, quotes and communities; Bluesky reply controls, quotes, languages and content labels; Mastodon polls, sensitive media and quotes; Threads reply control, polls and link cards; Instagram people tags, Reel feed sharing and locations; Facebook coloured text backgrounds; TikTok drafts, photo cover and music; the YouTube disclosure, license, language and visibility settings; Pinterest board sections and video cover frame; Telegram and Discord notification, button, poll and pin settings; Tumblr state, slug and reblog settings.
+- LinkedIn post types `document`, `poll` and `reshare`, with `documentTitle`, `poll`, `reshareId`, `thumbnailUrl`, `visibility` and `disableReshare`.
+- Media upload accepts PDF, Word and PowerPoint files (up to 100MB). A document can only be published to LinkedIn, as a `document` post.
+
+### Changed
+- X `replySettings` now also applies to the first post of a thread.
+
 ## 1.16.0 (2026-10-09)
 
 ### Removed
